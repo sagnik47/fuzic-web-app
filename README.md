@@ -34,8 +34,8 @@ A web application that helps you manage your Spotify music library with three po
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/fuzic-app.git
-cd fuzic-app
+git clone https://github.com/yourusername/fuzic-web-app.git
+cd fuzic-web-app
 ```
 
 2. Install dependencies:
@@ -94,7 +94,7 @@ npm run dev
 ## Project Structure
 
 ```
-fuzic-app/
+fuzic-web-app/
 ├── server.js              # Main server file
 ├── package.json          # Dependencies and scripts
 ├── .env.example          # Environment variables template

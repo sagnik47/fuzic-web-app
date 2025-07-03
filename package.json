@@ -1,5 +1,5 @@
 {
-  "name": "fuzic-app",
+  "name": "fuzic-web-app",
   "version": "1.0.0",
   "description": "A web app to manage Spotify playlists - convert liked songs, merge playlists, and remove artist songs",
   "main": "server.js",

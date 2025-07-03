@@ -261,5 +261,5 @@ app.post('/api/logout', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Fuzic app listening at http://localhost:${port}`);
+  console.log(`Fuzic web app listening at http://localhost:${port}`);
 });
