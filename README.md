@@ -31,4 +31,4 @@ A web application that helps you manage your Spotify music library with three po
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-Built for fun using Rust (Warp) and a little help from AI
+## Built for fun using Rust (Warp) and a little help from AI
