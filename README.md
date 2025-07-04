@@ -34,7 +34,7 @@ A web application that helps you manage your Spotify music library with three po
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/fuzic-web-app.git
+git clone https://github.com/sagnik47/fuzic-web-app.git
 cd fuzic-web-app
 ```
 
