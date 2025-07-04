@@ -38,7 +38,7 @@ app.get('/', (req, res) => {
 // Login route
 app.get('/login', (req, res) => {
   const state = generateRandomString(16);
-  const scope = 'user-library-read playlist-read-private playlist-modify-private playlist-modify-public';
+  const scope = ['user-library-read', 'playlist-read-private', 'playlist-modify-private', 'playlist-modify-public'];
   
   res.cookie('spotify_auth_state', state);
   
