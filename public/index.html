@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+    <link
+      rel="stylesheet"
+      as="style"
+      onload="this.rel='stylesheet'"
+      href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Spline+Sans%3Awght%40400%3B500%3B700"
+    />
+
+    <title>Fuzic - Spotify Playlist Manager</title>
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  </head>
+  <body>
+    <div class="relative flex size-full min-h-screen flex-col bg-[#111714] dark group/design-root overflow-x-hidden" style='font-family: "Spline Sans", "Noto Sans", sans-serif;'>
+      <div class="layout-container flex h-full grow flex-col">
+        <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#29382f] px-10 py-3">
+          <div class="flex items-center gap-4 text-white">
+            <div class="size-4">
+              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M24 4H6V17.3333V30.6667H24V44H42V30.6667V17.3333H24V4Z" fill="currentColor"></path>
+              </svg>
+            </div>
+            <h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em]">Fuzic</h2>
+          </div>
+          <div class="flex flex-1 justify-end gap-8">
+            <div class="flex items-center gap-9">
+              <a class="text-white text-sm font-medium leading-normal" href="#">Home</a>
+              <a class="text-white text-sm font-medium leading-normal" href="#about">About</a>
+            </div>
+            <button
+              class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#38e07b] text-[#111714] text-sm font-bold leading-normal tracking-[0.015em]"
+              onclick="window.location.href='/login'"
+            >
+              <span class="truncate">Log In</span>
+            </button>
+          </div>
+        </header>
+        <div class="px-40 flex flex-1 justify-center py-5">
+          <div class="layout-content-container flex flex-col max-w-[960px] flex-1">
+            <h2 class="text-white tracking-light text-[28px] font-bold leading-tight px-4 text-center pb-3 pt-5">Manage your music library</h2>
+            <div class="flex justify-center">
+              <div class="flex flex-1 gap-3 max-w-[480px] flex-col items-stretch px-4 py-3">
+                <button
+                  class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#38e07b] text-[#111714] text-sm font-bold leading-normal tracking-[0.015em] w-full"
+                  onclick="handleFeatureClick('convert')"
+                >
+                  <span class="truncate">Convert Liked Songs to Playlist</span>
+                </button>
+                <button
+                  class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#29382f] text-white text-sm font-bold leading-normal tracking-[0.015em] w-full"
+                  onclick="handleFeatureClick('merge')"
+                >
+                  <span class="truncate">Merge Playlists</span>
+                </button>
+                <button
+                  class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#29382f] text-white text-sm font-bold leading-normal tracking-[0.015em] w-full"
+                  onclick="handleFeatureClick('remove')"
+                >
+                  <span class="truncate">Remove Artist's Songs</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- About Section (Hidden by default) -->
+        <section id="about" class="hidden px-40 py-10">
+          <div class="layout-content-container flex flex-col max-w-[960px] mx-auto">
+            <h2 class="text-white text-[28px] font-bold leading-tight text-center pb-6">About Fuzic</h2>
+            <p class="text-white text-center text-base mb-8 max-w-2xl mx-auto">Fuzic is a powerful Spotify playlist management tool that helps you organize your music library with ease.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div class="bg-[#29382f] p-6 rounded-lg text-center">
+                <h3 class="text-[#38e07b] text-lg font-bold mb-3">🎯 Convert Liked Songs</h3>
+                <p class="text-white text-sm">Transform your liked songs into organized playlists with just one click.</p>
+              </div>
+              
+              <div class="bg-[#29382f] p-6 rounded-lg text-center">
+                <h3 class="text-[#38e07b] text-lg font-bold mb-3">🔄 Merge Playlists</h3>
+                <p class="text-white text-sm">Combine multiple playlists while automatically removing duplicates.</p>
+              </div>
+              
+              <div class="bg-[#29382f] p-6 rounded-lg text-center">
+                <h3 class="text-[#38e07b] text-lg font-bold mb-3">🚫 Remove Artist Songs</h3>
+                <p class="text-white text-sm">Quickly remove all songs by specific artists from any playlist.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+    
+    <script src="scripts/main.js"></script>
+  </body>
+</html>
