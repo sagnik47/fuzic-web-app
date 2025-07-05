@@ -104,6 +104,8 @@ app.get('/api/liked-songs', async (req, res) => {
 app.post('/api/convert-liked-to-playlist', async (req, res) => {
   try {
     const accessToken = req.cookies.access_token;
+    console.log('Convert API called, has token:', !!accessToken);
+    
     if (!accessToken) {
       return res.status(401).json({ error: 'No access token' });
     }
@@ -111,23 +113,41 @@ app.post('/api/convert-liked-to-playlist', async (req, res) => {
     spotifyApi.setAccessToken(accessToken);
     
     // Get user info
+    console.log('Getting user info...');
     const userInfo = await spotifyApi.getMe();
     const userId = userInfo.body.id;
+    console.log('User ID:', userId);
     
     // Get liked songs
+    console.log('Getting liked songs...');
     const likedSongs = await spotifyApi.getMySavedTracks({ limit: 50 });
+    console.log('Found liked songs:', likedSongs.body.items.length);
+    
+    if (likedSongs.body.items.length === 0) {
+      return res.json({ 
+        success: false, 
+        error: 'No liked songs found. Please like some songs first!' 
+      });
+    }
+    
     const trackUris = likedSongs.body.items.map(item => item.track.uri);
     
     // Create playlist
     const playlistName = `Liked Songs - ${new Date().toLocaleDateString()}`;
+    console.log('Creating playlist:', playlistName);
+    
     const playlist = await spotifyApi.createPlaylist(userId, playlistName, {
       description: 'Playlist created from liked songs using Fuzic',
       public: false
     });
     
+    console.log('Playlist created:', playlist.body.id);
+    
     // Add tracks to playlist
     if (trackUris.length > 0) {
+      console.log('Adding tracks to playlist...');
       await spotifyApi.addTracksToPlaylist(playlist.body.id, trackUris);
+      console.log('Tracks added successfully');
     }
     
     res.json({ 
@@ -136,8 +156,24 @@ app.post('/api/convert-liked-to-playlist', async (req, res) => {
       tracksAdded: trackUris.length 
     });
   } catch (error) {
-    console.error('Error converting liked songs to playlist:', error);
-    res.status(500).json({ error: 'Failed to convert liked songs to playlist' });
+    console.error('Detailed error converting liked songs:', error);
+    console.error('Error status:', error.statusCode);
+    console.error('Error body:', error.body);
+    
+    let errorMessage = 'Failed to convert liked songs to playlist';
+    
+    if (error.statusCode === 401) {
+      errorMessage = 'Authentication expired. Please log in again.';
+    } else if (error.statusCode === 403) {
+      errorMessage = 'Permission denied. Please check app permissions.';
+    } else if (error.body && error.body.error && error.body.error.message) {
+      errorMessage = error.body.error.message;
+    }
+    
+    res.status(error.statusCode || 500).json({ 
+      success: false,
+      error: errorMessage 
+    });
   }
 });
 
