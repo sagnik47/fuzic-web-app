@@ -2,27 +2,21 @@
 
 // Handle feature button clicks
 function handleFeatureClick(feature) {
-  const button = event.target.closest('button');
-  
-  // Add click animation
-  addClickAnimation(button);
-  
   // Check if user is logged in (has access token)
   if (!isAuthenticated()) {
     // Redirect to login if not authenticated
-    setTimeout(() => {
-      alert('Please log in to use this feature.');
-      window.location.href = '/login';
-    }, 200);
+    alert('Please log in to use this feature.');
+    window.location.href = '/login';
     return;
   }
   
-  // Show loading state
-  setTimeout(() => {
-    showLoading(button);
-    // Redirect to dashboard with the specific feature
-    window.location.href = `/dashboard?feature=${feature}`;
-  }, 300);
+  // Redirect to dashboard with the specific feature
+  window.location.href = `/dashboard?feature=${feature}`;
+}
+
+// Handle login button click
+function handleLoginClick() {
+  window.location.href = '/login';
 }
 
 // Handle navigation
@@ -74,33 +68,6 @@ function isAuthenticated() {
   return document.cookie.includes('access_token');
 }
 
-// Show loading state for buttons
-function showLoading(button) {
-  const originalText = button.querySelector('span').textContent;
-  button.setAttribute('data-original-text', originalText);
-  button.querySelector('span').textContent = 'Loading...';
-  button.disabled = true;
-  button.style.opacity = '0.7';
-}
-
-// Hide loading state for buttons
-function hideLoading(button) {
-  const originalText = button.getAttribute('data-original-text');
-  button.querySelector('span').textContent = originalText;
-  button.disabled = false;
-  button.style.opacity = '1';
-  button.removeAttribute('data-original-text');
-}
-
-// Add click animation to buttons
-function addClickAnimation(button) {
-  button.style.transform = 'scale(0.95)';
-  button.style.transition = 'transform 0.1s ease';
-  
-  setTimeout(() => {
-    button.style.transform = 'scale(1)';
-  }, 100);
-}
 
 // Load user profile and update UI
 async function loadUserProfile() {
@@ -123,7 +90,7 @@ async function loadUserProfile() {
 
 // Update login button to show user profile
 function updateLoginButton(user) {
-  const loginButton = document.querySelector('button[onclick="window.location.href=\'/login\'"]');
+  const loginButton = document.querySelector('button[onclick="handleLoginClick()"]');
   if (loginButton && user) {
     // Create profile button
     const profileButton = document.createElement('div');
