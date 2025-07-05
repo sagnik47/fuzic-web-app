@@ -150,29 +150,61 @@
       
       // LOGIN BUTTON FUNCTION
       function handleLoginClick() {
-        alert('Login button clicked! Redirecting to Spotify...');
         window.location.href = '/login';
       }
       
       // FEATURE BUTTON FUNCTION  
       function handleFeatureClick(feature) {
-        alert('Feature clicked: ' + feature + '. Checking login status...');
-        
-        // Simple cookie check
+        // Check if user is logged in
         if (document.cookie.indexOf('access_token') === -1) {
-          alert('Please log in first!');
+          // Not logged in, redirect to login
           window.location.href = '/login';
         } else {
+          // Logged in, go to dashboard with feature
           window.location.href = '/dashboard?feature=' + feature;
         }
       }
       
       // LOGOUT FUNCTION
       function logout() {
-        alert('Logging out...');
         fetch('/api/logout', { method: 'POST' })
           .then(function() { window.location.reload(); })
           .catch(function() { window.location.reload(); });
+      }
+      
+      // LOAD USER PROFILE IF AUTHENTICATED
+      function loadUserProfile() {
+        if (document.cookie.indexOf('access_token') === -1) {
+          return; // Not authenticated
+        }
+        
+        fetch('/api/user')
+          .then(function(response) {
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Not authenticated');
+          })
+          .then(function(user) {
+            updateLoginButton(user);
+          })
+          .catch(function(error) {
+            console.log('Error loading profile:', error);
+          });
+      }
+      
+      // UPDATE LOGIN BUTTON WITH USER PROFILE
+      function updateLoginButton(user) {
+        var loginButton = document.querySelector('button[onclick="handleLoginClick()"]');
+        if (loginButton && user && user.display_name) {
+          var profileHTML = '<div class="flex items-center gap-2">' +
+            (user.images && user.images[0] ? 
+              '<img src="' + user.images[0].url + '" alt="' + user.display_name + '" class="w-8 h-8 rounded-full border-2 border-[#38e07b]"> ' : '') +
+            '<span class="text-white text-sm font-medium">' + user.display_name + '</span>' +
+            '<button onclick="logout()" class="ml-2 text-xs text-[#38e07b] hover:text-white transition-colors">Logout</button>' +
+            '</div>';
+          loginButton.outerHTML = profileHTML;
+        }
       }
       
       // MAKE FUNCTIONS GLOBAL - CRITICAL!
@@ -184,21 +216,13 @@
       console.log('handleLoginClick:', typeof handleLoginClick);
       console.log('handleFeatureClick:', typeof handleFeatureClick);
       
-      // Test basic functionality
+      // Initialize when page loads
       document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM loaded');
+        console.log('DOM loaded - Fuzic ready!');
         
-        // Test after a short delay
+        // Load user profile if authenticated
         setTimeout(function() {
-          console.log('handleLoginClick available:', typeof window.handleLoginClick);
-          console.log('handleFeatureClick available:', typeof window.handleFeatureClick);
-          
-          const testButton = document.querySelector('button[onclick="handleLoginClick()"]');
-          if (testButton) {
-            console.log('Login button found:', testButton);
-          } else {
-            console.log('Login button NOT found');
-          }
+          loadUserProfile();
         }, 500);
       });
     </script>
