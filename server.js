@@ -253,6 +253,23 @@ app.post('/api/remove-artist-songs', async (req, res) => {
   }
 });
 
+// Get user profile
+app.get('/api/user', async (req, res) => {
+  try {
+    const accessToken = req.cookies.access_token;
+    if (!accessToken) {
+      return res.status(401).json({ error: 'No access token' });
+    }
+    
+    spotifyApi.setAccessToken(accessToken);
+    const userInfo = await spotifyApi.getMe();
+    res.json(userInfo.body);
+  } catch (error) {
+    console.error('Error fetching user info:', error);
+    res.status(500).json({ error: 'Failed to fetch user info' });
+  }
+});
+
 // Logout route
 app.post('/api/logout', (req, res) => {
   res.clearCookie('access_token');

@@ -15,6 +15,7 @@
     <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link rel="stylesheet" href="styles/output.css">
   </head>
   <body>
     <div class="relative flex size-full min-h-screen flex-col bg-[#111714] dark group/design-root overflow-x-hidden" style='font-family: "Spline Sans", "Noto Sans", sans-serif;'>
@@ -34,7 +35,7 @@
               <a class="text-white text-sm font-medium leading-normal" href="#about">About</a>
             </div>
             <button
-              class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#38e07b] text-[#111714] text-sm font-bold leading-normal tracking-[0.015em]"
+              class="btn-animated flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#38e07b] text-[#111714] text-sm font-bold leading-normal tracking-[0.015em] hover:shadow-lg transform transition-all duration-200"
               onclick="window.location.href='/login'"
             >
               <span class="truncate">Log In</span>
@@ -47,19 +48,19 @@
             <div class="flex justify-center">
               <div class="flex flex-1 gap-3 max-w-[480px] flex-col items-stretch px-4 py-3">
                 <button
-                  class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#38e07b] text-[#111714] text-sm font-bold leading-normal tracking-[0.015em] w-full"
+                  class="btn-animated flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#38e07b] text-[#111714] text-sm font-bold leading-normal tracking-[0.015em] w-full hover:shadow-lg transform transition-all duration-200"
                   onclick="handleFeatureClick('convert')"
                 >
                   <span class="truncate">Convert Liked Songs to Playlist</span>
                 </button>
                 <button
-                  class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#29382f] text-white text-sm font-bold leading-normal tracking-[0.015em] w-full"
+                  class="btn-animated flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#29382f] text-white text-sm font-bold leading-normal tracking-[0.015em] w-full hover:shadow-lg transform transition-all duration-200"
                   onclick="handleFeatureClick('merge')"
                 >
                   <span class="truncate">Merge Playlists</span>
                 </button>
                 <button
-                  class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#29382f] text-white text-sm font-bold leading-normal tracking-[0.015em] w-full"
+                  class="btn-animated flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#29382f] text-white text-sm font-bold leading-normal tracking-[0.015em] w-full hover:shadow-lg transform transition-all duration-200"
                   onclick="handleFeatureClick('remove')"
                 >
                   <span class="truncate">Remove Artist's Songs</span>

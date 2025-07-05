@@ -38,3 +38,36 @@ body {
 .track-item {
   @apply flex items-center p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0;
 }
+
+/* Button animations and effects */
+.btn-animated {
+  @apply transition-all duration-200 ease-in-out;
+  transform: scale(1);
+}
+
+.btn-animated:hover {
+  @apply shadow-lg;
+  transform: scale(1.05);
+}
+
+.btn-animated:active {
+  transform: scale(0.95);
+}
+
+.btn-primary:hover {
+  @apply bg-green-700 shadow-lg;
+  box-shadow: 0 4px 15px rgba(56, 224, 123, 0.3);
+}
+
+.btn-secondary:hover {
+  @apply bg-gray-700 shadow-lg;
+}
+
+/* Profile image animation */
+.profile-image {
+  @apply transition-transform duration-200;
+}
+
+.profile-image:hover {
+  transform: scale(1.1);
+}
