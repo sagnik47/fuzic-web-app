@@ -1,23 +1,61 @@
 // Main JavaScript functionality for Fuzic web app
 
-// Handle feature button clicks
-function handleFeatureClick(feature) {
+// Make functions globally available
+window.handleFeatureClick = function(feature) {
+  console.log('Feature clicked:', feature);
+  
+  // Add click animation
+  const button = event.target.closest('button');
+  if (button) {
+    button.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+      button.style.transform = 'scale(1)';
+    }, 150);
+  }
+  
   // Check if user is logged in (has access token)
   if (!isAuthenticated()) {
     // Redirect to login if not authenticated
-    alert('Please log in to use this feature.');
-    window.location.href = '/login';
+    setTimeout(() => {
+      alert('Please log in to use this feature.');
+      window.location.href = '/login';
+    }, 200);
     return;
   }
   
   // Redirect to dashboard with the specific feature
-  window.location.href = `/dashboard?feature=${feature}`;
-}
+  setTimeout(() => {
+    window.location.href = `/dashboard?feature=${feature}`;
+  }, 300);
+};
 
 // Handle login button click
-function handleLoginClick() {
-  window.location.href = '/login';
-}
+window.handleLoginClick = function() {
+  console.log('Login button clicked');
+  
+  // Add click animation
+  const button = event.target.closest('button');
+  if (button) {
+    button.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+      button.style.transform = 'scale(1)';
+      window.location.href = '/login';
+    }, 150);
+  } else {
+    window.location.href = '/login';
+  }
+};
+
+// Make logout function globally available
+window.logout = async function() {
+  try {
+    await fetch('/api/logout', { method: 'POST' });
+    window.location.reload();
+  } catch (error) {
+    console.error('Error logging out:', error);
+    window.location.reload();
+  }
+};
 
 // Handle navigation
 document.addEventListener('DOMContentLoaded', function() {
@@ -111,14 +149,4 @@ function updateLoginButton(user) {
   }
 }
 
-// Logout function
-async function logout() {
-  try {
-    await fetch('/api/logout', { method: 'POST' });
-    window.location.reload();
-  } catch (error) {
-    console.error('Error logging out:', error);
-    window.location.reload();
-  }
-}
 

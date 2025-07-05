@@ -97,6 +97,15 @@
       </div>
     </div>
     
+    <script>
+      console.log('JavaScript is loading...');
+      // Test if functions are available
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded');
+        console.log('handleLoginClick available:', typeof window.handleLoginClick);
+        console.log('handleFeatureClick available:', typeof window.handleFeatureClick);
+      });
+    </script>
     <script src="scripts/main.js"></script>
   </body>
 </html>
