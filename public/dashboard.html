@@ -8,10 +8,10 @@
       rel="stylesheet"
       as="style"
       onload="this.rel='stylesheet'"
-      href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Spline+Sans%3Awght%40400%3B500%3B700"
+      href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Spline+Sans%3Awght%40400%3B500%3B700&amp;family=Dancing+Script:wght@400;500;600;700&amp;family=Kalam:wght@300;400;700&amp;family=Caveat:wght@400;500;600;700"
     />
 
-    <title>Fuzic Dashboard - Spotify Playlist Manager</title>
+    <title>fuzic Dashboard - Spotify Playlist Manager | Where Music Fuses</title>
     <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -20,13 +20,43 @@
     <div class="relative flex size-full min-h-screen flex-col bg-[#111714] dark group/design-root overflow-x-hidden" style='font-family: "Spline Sans", "Noto Sans", sans-serif;'>
       <div class="layout-container flex h-full grow flex-col">
         <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#29382f] px-10 py-3">
-          <div class="flex items-center gap-4 text-white">
-            <div class="size-4">
-              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path fill-rule="evenodd" clip-rule="evenodd" d="M24 4H6V17.3333V30.6667H24V44H42V30.6667V17.3333H24V4Z" fill="currentColor"></path>
-              </svg>
+          <div class="flex items-center gap-3 text-white">
+            <!-- Fuzic Logo -->
+            <div class="flex items-center gap-2">
+              <!-- Dotted circular symbol -->
+              <div class="relative w-8 h-8">
+                <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <!-- Main circle -->
+                  <circle cx="16" cy="16" r="6" fill="currentColor"/>
+                  <!-- Surrounding dots -->
+                  <circle cx="8" cy="12" r="1.5" fill="currentColor"/>
+                  <circle cx="6" cy="16" r="1" fill="currentColor"/>
+                  <circle cx="8" cy="20" r="1.5" fill="currentColor"/>
+                  <circle cx="12" cy="24" r="1" fill="currentColor"/>
+                  <circle cx="16" cy="26" r="1.5" fill="currentColor"/>
+                  <circle cx="20" cy="24" r="1" fill="currentColor"/>
+                  <circle cx="24" cy="20" r="1.5" fill="currentColor"/>
+                  <circle cx="26" cy="16" r="1" fill="currentColor"/>
+                  <circle cx="24" cy="12" r="1.5" fill="currentColor"/>
+                  <circle cx="20" cy="8" r="1" fill="currentColor"/>
+                  <circle cx="16" cy="6" r="1.5" fill="currentColor"/>
+                  <circle cx="12" cy="8" r="1" fill="currentColor"/>
+                  <!-- Additional scattered dots -->
+                  <circle cx="4" cy="10" r="0.5" fill="currentColor"/>
+                  <circle cx="2" cy="18" r="0.5" fill="currentColor"/>
+                  <circle cx="6" cy="26" r="0.5" fill="currentColor"/>
+                  <circle cx="14" cy="28" r="0.5" fill="currentColor"/>
+                  <circle cx="22" cy="28" r="0.5" fill="currentColor"/>
+                  <circle cx="28" cy="22" r="0.5" fill="currentColor"/>
+                  <circle cx="30" cy="14" r="0.5" fill="currentColor"/>
+                  <circle cx="28" cy="6" r="0.5" fill="currentColor"/>
+                  <circle cx="18" cy="4" r="0.5" fill="currentColor"/>
+                  <circle cx="10" cy="4" r="0.5" fill="currentColor"/>
+                </svg>
+              </div>
+              <!-- Fuzic text -->
+              <h2 class="text-white text-2xl leading-tight" style="font-family: 'Caveat', cursive; font-weight: 600; letter-spacing: -0.01em;">fuzic</h2>
             </div>
-            <h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em]">Fuzic</h2>
           </div>
           <div class="flex flex-1 justify-end gap-8">
             <div class="flex items-center gap-9">
@@ -167,6 +197,237 @@
       </div>
     </div>
     
-    <script src="scripts/dashboard.js"></script>
+    <script>
+      // Dashboard JavaScript for Fuzic
+      console.log('Dashboard JavaScript loading...');
+      
+      // Feature management
+      function showFeature(featureName) {
+        // Hide all features
+        const features = document.querySelectorAll('.feature-content');
+        features.forEach(f => f.classList.add('hidden'));
+        
+        // Reset button styles
+        const buttons = document.querySelectorAll('#convert-btn, #merge-btn, #remove-btn');
+        buttons.forEach(btn => {
+          btn.className = btn.className.replace('bg-[#38e07b] text-[#111714]', 'bg-[#29382f] text-white');
+        });
+        
+        // Show selected feature
+        const feature = document.getElementById(featureName + '-feature');
+        if (feature) {
+          feature.classList.remove('hidden');
+        }
+        
+        // Highlight selected button
+        const selectedBtn = document.getElementById(featureName + '-btn');
+        if (selectedBtn) {
+          selectedBtn.className = selectedBtn.className.replace('bg-[#29382f] text-white', 'bg-[#38e07b] text-[#111714]');
+        }
+        
+        // Load data for specific features
+        if (featureName === 'merge' || featureName === 'remove') {
+          loadPlaylists();
+        }
+      }
+      
+      // Convert liked songs to playlist
+      function convertLikedSongs() {
+        const btn = document.getElementById('convert-action-btn');
+        const result = document.getElementById('convert-result');
+        
+        btn.textContent = 'Creating...';
+        btn.disabled = true;
+        
+        fetch('/api/convert-liked-to-playlist', { method: 'POST' })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              result.innerHTML = '<p class="text-[#38e07b] font-medium">✅ Successfully created playlist "' + data.playlist.name + '" with ' + data.tracksAdded + ' tracks!</p>';
+            } else {
+              result.innerHTML = '<p class="text-red-400 font-medium">❌ Error: ' + (data.error || 'Unknown error') + '</p>';
+            }
+          })
+          .catch(error => {
+            result.innerHTML = '<p class="text-red-400 font-medium">❌ Error: ' + error.message + '</p>';
+          })
+          .finally(() => {
+            btn.textContent = 'Create Playlist';
+            btn.disabled = false;
+          });
+      }
+      
+      // Load user playlists
+      function loadPlaylists() {
+        fetch('/api/playlists')
+          .then(response => response.json())
+          .then(data => {
+            if (data.items) {
+              updatePlaylistUI(data.items);
+            }
+          })
+          .catch(error => {
+            console.error('Error loading playlists:', error);
+          });
+      }
+      
+      // Update playlist UI
+      function updatePlaylistUI(playlists) {
+        // Update merge playlist list
+        const playlistList = document.getElementById('playlist-list');
+        if (playlistList) {
+          playlistList.innerHTML = playlists.map(playlist => 
+            '<label class="flex items-center p-2 bg-[#111714] rounded cursor-pointer hover:bg-[#1a1a1a]">' +
+            '<input type="checkbox" value="' + playlist.id + '" class="mr-3 text-[#38e07b]">' +
+            '<span class="text-white">' + playlist.name + ' (' + playlist.tracks.total + ' tracks)</span>' +
+            '</label>'
+          ).join('');
+        }
+        
+        // Update remove playlist select
+        const removeSelect = document.getElementById('remove-playlist-select');
+        if (removeSelect) {
+          removeSelect.innerHTML = '<option value="">Select a playlist...</option>' +
+            playlists.map(playlist => 
+              '<option value="' + playlist.id + '">' + playlist.name + ' (' + playlist.tracks.total + ' tracks)</option>'
+            ).join('');
+        }
+      }
+      
+      // Merge playlists
+      function mergePlaylists() {
+        const playlistName = document.getElementById('merge-playlist-name').value;
+        const selectedPlaylists = Array.from(document.querySelectorAll('#playlist-list input:checked')).map(cb => cb.value);
+        const result = document.getElementById('merge-result');
+        const btn = document.getElementById('merge-action-btn');
+        
+        if (!playlistName.trim()) {
+          result.innerHTML = '<p class="text-red-400 font-medium">❌ Please enter a playlist name</p>';
+          return;
+        }
+        
+        if (selectedPlaylists.length < 2) {
+          result.innerHTML = '<p class="text-red-400 font-medium">❌ Please select at least 2 playlists to merge</p>';
+          return;
+        }
+        
+        btn.textContent = 'Merging...';
+        btn.disabled = true;
+        
+        fetch('/api/merge-playlists', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            playlistIds: selectedPlaylists,
+            newPlaylistName: playlistName
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            result.innerHTML = '<p class="text-[#38e07b] font-medium">✅ Successfully merged into "' + data.playlist.name + '" with ' + data.tracksAdded + ' tracks!</p>';
+            document.getElementById('merge-playlist-name').value = '';
+            document.querySelectorAll('#playlist-list input:checked').forEach(cb => cb.checked = false);
+          } else {
+            result.innerHTML = '<p class="text-red-400 font-medium">❌ Error: ' + (data.error || 'Unknown error') + '</p>';
+          }
+        })
+        .catch(error => {
+          result.innerHTML = '<p class="text-red-400 font-medium">❌ Error: ' + error.message + '</p>';
+        })
+        .finally(() => {
+          btn.textContent = 'Merge Playlists';
+          btn.disabled = false;
+        });
+      }
+      
+      // Remove artist songs
+      function removeArtistSongs() {
+        const playlistId = document.getElementById('remove-playlist-select').value;
+        const artistName = document.getElementById('artist-name').value;
+        const result = document.getElementById('remove-result');
+        const btn = document.getElementById('remove-action-btn');
+        
+        if (!playlistId) {
+          result.innerHTML = '<p class="text-red-400 font-medium">❌ Please select a playlist</p>';
+          return;
+        }
+        
+        if (!artistName.trim()) {
+          result.innerHTML = '<p class="text-red-400 font-medium">❌ Please enter an artist name</p>';
+          return;
+        }
+        
+        btn.textContent = 'Removing...';
+        btn.disabled = true;
+        
+        fetch('/api/remove-artist-songs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            playlistId: playlistId,
+            artistName: artistName
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            result.innerHTML = '<p class="text-[#38e07b] font-medium">✅ Successfully removed ' + data.tracksRemoved + ' tracks by "' + artistName + '"</p>';
+            document.getElementById('artist-name').value = '';
+          } else {
+            result.innerHTML = '<p class="text-red-400 font-medium">❌ Error: ' + (data.error || 'Unknown error') + '</p>';
+          }
+        })
+        .catch(error => {
+          result.innerHTML = '<p class="text-red-400 font-medium">❌ Error: ' + error.message + '</p>';
+        })
+        .finally(() => {
+          btn.textContent = 'Remove Songs';
+          btn.disabled = false;
+        });
+      }
+      
+      // Logout function
+      function logout() {
+        fetch('/api/logout', { method: 'POST' })
+          .then(() => window.location.href = '/')
+          .catch(() => window.location.href = '/');
+      }
+      
+      // Load user info
+      function loadUserInfo() {
+        fetch('/api/user')
+          .then(response => response.json())
+          .then(user => {
+            const userInfo = document.getElementById('user-info');
+            if (userInfo && user.display_name) {
+              userInfo.textContent = 'Welcome, ' + user.display_name + '!';
+            }
+          })
+          .catch(error => {
+            console.log('Error loading user info:', error);
+          });
+      }
+      
+      // Make functions global
+      window.showFeature = showFeature;
+      window.convertLikedSongs = convertLikedSongs;
+      window.mergePlaylists = mergePlaylists;
+      window.removeArtistSongs = removeArtistSongs;
+      window.logout = logout;
+      
+      // Initialize when page loads
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('Dashboard ready!');
+        loadUserInfo();
+        
+        // Check if a specific feature was requested
+        const urlParams = new URLSearchParams(window.location.search);
+        const feature = urlParams.get('feature');
+        if (feature) {
+          showFeature(feature);
+        }
+      });
+    </script>
   </body>
 </html>
