@@ -99,11 +99,23 @@
     
     <script>
       console.log('JavaScript is loading...');
-      // Test if functions are available
+      // Test basic functionality
       document.addEventListener('DOMContentLoaded', function() {
         console.log('DOM loaded');
-        console.log('handleLoginClick available:', typeof window.handleLoginClick);
-        console.log('handleFeatureClick available:', typeof window.handleFeatureClick);
+        
+        // Test after a short delay to ensure main.js has loaded
+        setTimeout(function() {
+          console.log('handleLoginClick available:', typeof window.handleLoginClick);
+          console.log('handleFeatureClick available:', typeof window.handleFeatureClick);
+          
+          // Add a test button click listener to verify JavaScript is working
+          const testButton = document.querySelector('button[onclick="handleLoginClick()"]');
+          if (testButton) {
+            console.log('Login button found:', testButton);
+          } else {
+            console.log('Login button NOT found');
+          }
+        }, 500);
       });
     </script>
     <script src="scripts/main.js"></script>
