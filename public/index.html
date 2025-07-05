@@ -15,7 +15,19 @@
     <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link rel="stylesheet" href="styles/output.css">
+    <style>
+      .btn-animated {
+        transition: all 0.2s ease-in-out;
+        transform: scale(1);
+      }
+      .btn-animated:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      }
+      .btn-animated:active {
+        transform: scale(0.95);
+      }
+    </style>
   </head>
   <body>
     <div class="relative flex size-full min-h-screen flex-col bg-[#111714] dark group/design-root overflow-x-hidden" style='font-family: "Spline Sans", "Noto Sans", sans-serif;'>
@@ -135,16 +147,52 @@
     
     <script>
       console.log('JavaScript is loading...');
+      
+      // LOGIN BUTTON FUNCTION
+      function handleLoginClick() {
+        alert('Login button clicked! Redirecting to Spotify...');
+        window.location.href = '/login';
+      }
+      
+      // FEATURE BUTTON FUNCTION  
+      function handleFeatureClick(feature) {
+        alert('Feature clicked: ' + feature + '. Checking login status...');
+        
+        // Simple cookie check
+        if (document.cookie.indexOf('access_token') === -1) {
+          alert('Please log in first!');
+          window.location.href = '/login';
+        } else {
+          window.location.href = '/dashboard?feature=' + feature;
+        }
+      }
+      
+      // LOGOUT FUNCTION
+      function logout() {
+        alert('Logging out...');
+        fetch('/api/logout', { method: 'POST' })
+          .then(function() { window.location.reload(); })
+          .catch(function() { window.location.reload(); });
+      }
+      
+      // MAKE FUNCTIONS GLOBAL - CRITICAL!
+      window.handleLoginClick = handleLoginClick;
+      window.handleFeatureClick = handleFeatureClick; 
+      window.logout = logout;
+      
+      console.log('JavaScript functions loaded!');
+      console.log('handleLoginClick:', typeof handleLoginClick);
+      console.log('handleFeatureClick:', typeof handleFeatureClick);
+      
       // Test basic functionality
       document.addEventListener('DOMContentLoaded', function() {
         console.log('DOM loaded');
         
-        // Test after a short delay to ensure main.js has loaded
+        // Test after a short delay
         setTimeout(function() {
           console.log('handleLoginClick available:', typeof window.handleLoginClick);
           console.log('handleFeatureClick available:', typeof window.handleFeatureClick);
           
-          // Add a test button click listener to verify JavaScript is working
           const testButton = document.querySelector('button[onclick="handleLoginClick()"]');
           if (testButton) {
             console.log('Login button found:', testButton);
@@ -154,6 +202,5 @@
         }, 500);
       });
     </script>
-    <script src="scripts/main.js"></script>
   </body>
 </html>
