@@ -11,7 +11,7 @@
       href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Spline+Sans%3Awght%40400%3B500%3B700"
     />
 
-    <title>Fuzic - Spotify Playlist Manager</title>
+    <title>fuzic - Spotify Playlist Manager | Where Music Fuses</title>
     <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -21,13 +21,43 @@
     <div class="relative flex size-full min-h-screen flex-col bg-[#111714] dark group/design-root overflow-x-hidden" style='font-family: "Spline Sans", "Noto Sans", sans-serif;'>
       <div class="layout-container flex h-full grow flex-col">
         <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#29382f] px-10 py-3">
-          <div class="flex items-center gap-4 text-white">
-            <div class="size-4">
-              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path fill-rule="evenodd" clip-rule="evenodd" d="M24 4H6V17.3333V30.6667H24V44H42V30.6667V17.3333H24V4Z" fill="currentColor"></path>
-              </svg>
+          <div class="flex items-center gap-3 text-white">
+            <!-- Fuzic Logo -->
+            <div class="flex items-center gap-2">
+              <!-- Dotted circular symbol -->
+              <div class="relative w-8 h-8">
+                <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <!-- Main circle -->
+                  <circle cx="16" cy="16" r="6" fill="currentColor"/>
+                  <!-- Surrounding dots -->
+                  <circle cx="8" cy="12" r="1.5" fill="currentColor"/>
+                  <circle cx="6" cy="16" r="1" fill="currentColor"/>
+                  <circle cx="8" cy="20" r="1.5" fill="currentColor"/>
+                  <circle cx="12" cy="24" r="1" fill="currentColor"/>
+                  <circle cx="16" cy="26" r="1.5" fill="currentColor"/>
+                  <circle cx="20" cy="24" r="1" fill="currentColor"/>
+                  <circle cx="24" cy="20" r="1.5" fill="currentColor"/>
+                  <circle cx="26" cy="16" r="1" fill="currentColor"/>
+                  <circle cx="24" cy="12" r="1.5" fill="currentColor"/>
+                  <circle cx="20" cy="8" r="1" fill="currentColor"/>
+                  <circle cx="16" cy="6" r="1.5" fill="currentColor"/>
+                  <circle cx="12" cy="8" r="1" fill="currentColor"/>
+                  <!-- Additional scattered dots -->
+                  <circle cx="4" cy="10" r="0.5" fill="currentColor"/>
+                  <circle cx="2" cy="18" r="0.5" fill="currentColor"/>
+                  <circle cx="6" cy="26" r="0.5" fill="currentColor"/>
+                  <circle cx="14" cy="28" r="0.5" fill="currentColor"/>
+                  <circle cx="22" cy="28" r="0.5" fill="currentColor"/>
+                  <circle cx="28" cy="22" r="0.5" fill="currentColor"/>
+                  <circle cx="30" cy="14" r="0.5" fill="currentColor"/>
+                  <circle cx="28" cy="6" r="0.5" fill="currentColor"/>
+                  <circle cx="18" cy="4" r="0.5" fill="currentColor"/>
+                  <circle cx="10" cy="4" r="0.5" fill="currentColor"/>
+                </svg>
+              </div>
+              <!-- Fuzic text -->
+              <h2 class="text-white text-xl font-bold leading-tight" style="font-family: 'Spline Sans', sans-serif; font-weight: 700; letter-spacing: -0.02em;">fuzic</h2>
             </div>
-            <h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em]">Fuzic</h2>
           </div>
           <div class="flex flex-1 justify-end gap-8">
             <div class="flex items-center gap-9">
@@ -44,7 +74,10 @@
         </header>
         <div class="px-40 flex flex-1 justify-center py-5">
           <div class="layout-content-container flex flex-col max-w-[960px] flex-1">
-            <h2 class="text-white tracking-light text-[28px] font-bold leading-tight px-4 text-center pb-3 pt-5">Manage your music library</h2>
+            <div class="text-center px-4 pt-5 pb-3">
+              <h2 class="text-white text-[28px] font-bold leading-tight mb-2">Manage your music library</h2>
+              <p class="text-[#38e07b] text-sm font-medium tracking-[0.2em] uppercase">WHERE MUSIC FUSES</p>
+            </div>
             <div class="flex justify-center">
               <div class="flex flex-1 gap-3 max-w-[480px] flex-col items-stretch px-4 py-3">
                 <button
@@ -73,8 +106,11 @@
         <!-- About Section (Hidden by default) -->
         <section id="about" class="hidden px-40 py-10">
           <div class="layout-content-container flex flex-col max-w-[960px] mx-auto">
-            <h2 class="text-white text-[28px] font-bold leading-tight text-center pb-6">About Fuzic</h2>
-            <p class="text-white text-center text-base mb-8 max-w-2xl mx-auto">Fuzic is a powerful Spotify playlist management tool that helps you organize your music library with ease.</p>
+            <div class="text-center mb-8">
+              <h2 class="text-white text-[28px] font-bold leading-tight mb-3">About fuzic</h2>
+              <p class="text-[#38e07b] text-sm font-medium tracking-[0.2em] uppercase mb-4">WHERE MUSIC FUSES</p>
+              <p class="text-white text-base max-w-2xl mx-auto">fuzic is a powerful Spotify playlist management tool that helps you organize your music library with ease. Where different playlists, songs, and musical experiences come together seamlessly.</p>
+            </div>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div class="bg-[#29382f] p-6 rounded-lg text-center">
