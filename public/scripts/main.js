@@ -1,115 +1,79 @@
-// Main JavaScript functionality for Fuzic web app
+// Fuzic Web App - Simple JavaScript
+console.log('Loading Fuzic JavaScript...');
 
-// Simple utility function to check authentication
-function isAuthenticated() {
-  return document.cookie.includes('access_token');
-}
-
-// Simple feature button handler
-function handleFeatureClick(feature) {
-  console.log('Feature clicked:', feature);
-  
-  // Check if user is logged in
-  if (!isAuthenticated()) {
-    alert('Please log in to use this feature.');
-    window.location.href = '/login';
-    return;
-  }
-  
-  // Redirect to dashboard with feature
-  window.location.href = `/dashboard?feature=${feature}`;
-}
-
-// Simple login button handler
+// LOGIN BUTTON FUNCTION
 function handleLoginClick() {
-  console.log('Login button clicked');
+  alert('Login button clicked! Redirecting to Spotify...');
   window.location.href = '/login';
 }
 
-// Simple logout function
-function logout() {
-  fetch('/api/logout', { method: 'POST' })
-    .then(() => window.location.reload())
-    .catch(() => window.location.reload());
+// FEATURE BUTTON FUNCTION  
+function handleFeatureClick(feature) {
+  alert('Feature clicked: ' + feature + '. Checking login status...');
+  
+  // Simple cookie check
+  if (document.cookie.indexOf('access_token') === -1) {
+    alert('Please log in first!');
+    window.location.href = '/login';
+  } else {
+    window.location.href = '/dashboard?feature=' + feature;
+  }
 }
 
-// Make all functions globally available
-window.handleFeatureClick = handleFeatureClick;
-window.handleLoginClick = handleLoginClick;
-window.logout = logout;
-window.isAuthenticated = isAuthenticated;
+// LOGOUT FUNCTION
+function logout() {
+  alert('Logging out...');
+  fetch('/api/logout', { method: 'POST' })
+    .then(function() { window.location.reload(); })
+    .catch(function() { window.location.reload(); });
+}
 
-// Handle navigation when page loads
+// MAKE FUNCTIONS GLOBAL - CRITICAL!
+window.handleLoginClick = handleLoginClick;
+window.handleFeatureClick = handleFeatureClick; 
+window.logout = logout;
+
+console.log('JavaScript functions loaded!');
+console.log('handleLoginClick:', typeof handleLoginClick);
+console.log('handleFeatureClick:', typeof handleFeatureClick);
+
+// Simple DOM ready handler
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('DOM loaded - JavaScript is working!');
+  console.log('DOM loaded - Fuzic is ready!');
   
-  // Try to load user profile if authenticated
-  if (isAuthenticated()) {
-    loadUserProfile();
-  }
-  
-  // Simple about link handler
-  const aboutLink = document.querySelector('a[href="#about"]');
-  const aboutSection = document.querySelector('#about');
-  const mainContent = document.querySelector('.layout-container > div:nth-child(2)');
-  
-  if (aboutLink && aboutSection && mainContent) {
-    aboutLink.addEventListener('click', function(e) {
-      e.preventDefault();
-      
-      if (aboutSection.classList.contains('hidden')) {
-        aboutSection.classList.remove('hidden');
-        mainContent.style.display = 'none';
-        aboutLink.textContent = 'Home';
-      } else {
-        aboutSection.classList.add('hidden');
-        mainContent.style.display = 'flex';
-        aboutLink.textContent = 'About';
-      }
-    });
-  }
+  // Test button accessibility
+  setTimeout(function() {
+    var loginBtn = document.querySelector('button[onclick*="handleLoginClick"]');
+    var convertBtn = document.querySelector('button[onclick*="convert"]');
+    
+    console.log('Login button found:', !!loginBtn);
+    console.log('Convert button found:', !!convertBtn);
+    
+    if (loginBtn) {
+      console.log('Login button onclick:', loginBtn.getAttribute('onclick'));
+    }
+  }, 1000);
 });
 
-// Simple profile loading
-function loadUserProfile() {
-  if (!isAuthenticated()) {
-    return;
-  }
+// About page navigation
+function toggleAbout() {
+  var aboutSection = document.getElementById('about');
+  var mainContent = document.querySelector('.layout-container > div:nth-child(2)');
+  var aboutLink = document.querySelector('a[href="#about"]');
   
-  fetch('/api/user')
-    .then(response => {
-      if (response.ok) {
-        return response.json();
-      }
-      throw new Error('Not authenticated');
-    })
-    .then(user => {
-      updateLoginButton(user);
-    })
-    .catch(error => {
-      console.log('Error loading profile:', error);
-    });
+  if (aboutSection && mainContent && aboutLink) {
+    if (aboutSection.classList.contains('hidden')) {
+      aboutSection.classList.remove('hidden');
+      mainContent.style.display = 'none';
+      aboutLink.textContent = 'Home';
+    } else {
+      aboutSection.classList.add('hidden');
+      mainContent.style.display = 'flex';
+      aboutLink.textContent = 'About';
+    }
+  }
 }
 
-// Simple profile button update
-function updateLoginButton(user) {
-  const loginButton = document.querySelector('button[onclick="handleLoginClick()"]');
-  if (loginButton && user && user.display_name) {
-    const profileHTML = `
-      <div class="flex items-center gap-2">
-        <img src="${user.images && user.images[0] ? user.images[0].url : ''}" 
-             alt="${user.display_name}" 
-             class="w-8 h-8 rounded-full border-2 border-[#38e07b]" 
-             style="display: ${user.images && user.images[0] ? 'block' : 'none'}">
-        <span class="text-white text-sm font-medium">${user.display_name}</span>
-        <button onclick="logout()" 
-                class="ml-2 text-xs text-[#38e07b] hover:text-white">
-          Logout
-        </button>
-      </div>
-    `;
-    loginButton.outerHTML = profileHTML;
-  }
-}
+window.toggleAbout = toggleAbout;
 
 
