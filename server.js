@@ -181,12 +181,18 @@ app.post('/api/convert-liked-to-playlist', refreshTokenIfNeeded, async (req, res
     // Get user info
     console.log('Getting user info...');
     const userInfo = await spotifyApi.getMe();
+    if (!userInfo || !userInfo.body) {
+      throw new Error('Failed to get user information from Spotify');
+    }
     const userId = userInfo.body.id;
     console.log('User ID:', userId);
     
     // Get liked songs
     console.log('Getting liked songs...');
     const likedSongs = await spotifyApi.getMySavedTracks({ limit: 50 });
+    if (!likedSongs || !likedSongs.body) {
+      throw new Error('Failed to get liked songs from Spotify');
+    }
     console.log('Found liked songs:', likedSongs.body.items.length);
     
     if (likedSongs.body.items.length === 0) {
@@ -206,16 +212,21 @@ app.post('/api/convert-liked-to-playlist', refreshTokenIfNeeded, async (req, res
       description: 'Playlist created from liked songs using Fuzic',
       public: false
     });
+    
     if (!playlistResponse || !playlistResponse.body) {
-      throw new Error('Spotify API did not return a playlist object.');
+      throw new Error('Spotify API did not return a playlist object. Response: ' + JSON.stringify(playlistResponse));
     }
+    
     const playlistId = playlistResponse.body.id;
     console.log('Playlist created:', playlistId);
     
     // Add tracks to playlist
     if (trackUris.length > 0) {
       console.log('Adding tracks to playlist...');
-      await spotifyApi.addTracksToPlaylist(playlistId, trackUris);
+      const addTracksResponse = await spotifyApi.addTracksToPlaylist(playlistId, trackUris);
+      if (!addTracksResponse || !addTracksResponse.body) {
+        throw new Error('Failed to add tracks to playlist');
+      }
       console.log('Tracks added successfully');
     }
     
@@ -228,6 +239,7 @@ app.post('/api/convert-liked-to-playlist', refreshTokenIfNeeded, async (req, res
     console.error('Detailed error converting liked songs:', error);
     console.error('Error status:', error.statusCode);
     console.error('Error body:', error.body);
+    console.error('Error message:', error.message);
     
     let errorMessage = 'Failed to convert liked songs to playlist';
     
@@ -237,6 +249,8 @@ app.post('/api/convert-liked-to-playlist', refreshTokenIfNeeded, async (req, res
       errorMessage = 'Permission denied. Please check app permissions.';
     } else if (error.body && error.body.error && error.body.error.message) {
       errorMessage = error.body.error.message;
+    } else if (error.message) {
+      errorMessage = error.message;
     }
     
     res.status(error.statusCode || 500).json({ 
@@ -264,6 +278,9 @@ app.post('/api/merge-playlists', refreshTokenIfNeeded, async (req, res) => {
     
     // Get user info
     const userInfo = await spotifyApi.getMe();
+    if (!userInfo || !userInfo.body) {
+      throw new Error('Failed to get user information from Spotify');
+    }
     const userId = userInfo.body.id;
     
     // Get tracks from all playlists
@@ -273,7 +290,7 @@ app.post('/api/merge-playlists', refreshTokenIfNeeded, async (req, res) => {
     for (const playlistId of playlistIds) {
       const playlistResponse = await spotifyApi.getPlaylistTracks(playlistId);
       if (!playlistResponse || !playlistResponse.body) {
-        throw new Error('Spotify API did not return playlist tracks.');
+        throw new Error('Spotify API did not return playlist tracks for playlist: ' + playlistId);
       }
       const tracks = playlistResponse.body.items
         .filter(item => item.track && !seenTrackIds.has(item.track.id))
@@ -290,14 +307,18 @@ app.post('/api/merge-playlists', refreshTokenIfNeeded, async (req, res) => {
       public: false
     });
     if (!newPlaylistResponse || !newPlaylistResponse.body) {
-      throw new Error('Spotify API did not return a playlist object.');
+      throw new Error('Spotify API did not return a playlist object. Response: ' + JSON.stringify(newPlaylistResponse));
     }
     const newPlaylistId = newPlaylistResponse.body.id;
+    
     // Add tracks to new playlist (Spotify API limits to 100 tracks per request)
     const batchSize = 100;
     for (let i = 0; i < allTracks.length; i += batchSize) {
       const batch = allTracks.slice(i, i + batchSize);
-      await spotifyApi.addTracksToPlaylist(newPlaylistId, batch);
+      const addTracksResponse = await spotifyApi.addTracksToPlaylist(newPlaylistId, batch);
+      if (!addTracksResponse || !addTracksResponse.body) {
+        throw new Error('Failed to add tracks batch to playlist');
+      }
     }
     
     res.json({ 
@@ -307,7 +328,26 @@ app.post('/api/merge-playlists', refreshTokenIfNeeded, async (req, res) => {
     });
   } catch (error) {
     console.error('Error merging playlists:', error);
-    res.status(500).json({ error: 'Failed to merge playlists' });
+    console.error('Error status:', error.statusCode);
+    console.error('Error body:', error.body);
+    console.error('Error message:', error.message);
+    
+    let errorMessage = 'Failed to merge playlists';
+    
+    if (error.statusCode === 401) {
+      errorMessage = 'Authentication expired. Please log in again.';
+    } else if (error.statusCode === 403) {
+      errorMessage = 'Permission denied. Please check app permissions.';
+    } else if (error.body && error.body.error && error.body.error.message) {
+      errorMessage = error.body.error.message;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    res.status(error.statusCode || 500).json({ 
+      success: false,
+      error: errorMessage 
+    });
   }
 });
 
@@ -319,8 +359,9 @@ app.post('/api/remove-artist-songs', refreshTokenIfNeeded, async (req, res) => {
     // Get playlist tracks
     const playlistResponse = await spotifyApi.getPlaylistTracks(playlistId);
     if (!playlistResponse || !playlistResponse.body) {
-      throw new Error('Spotify API did not return playlist tracks.');
+      throw new Error('Spotify API did not return playlist tracks for playlist: ' + playlistId);
     }
+    
     // Find tracks by the specified artist
     const tracksToRemove = playlistResponse.body.items
       .filter(item => 
@@ -333,7 +374,10 @@ app.post('/api/remove-artist-songs', refreshTokenIfNeeded, async (req, res) => {
     
     // Remove tracks from playlist
     if (tracksToRemove.length > 0) {
-      await spotifyApi.removeTracksFromPlaylist(playlistId, tracksToRemove);
+      const removeTracksResponse = await spotifyApi.removeTracksFromPlaylist(playlistId, tracksToRemove);
+      if (!removeTracksResponse || !removeTracksResponse.body) {
+        throw new Error('Failed to remove tracks from playlist');
+      }
     }
     
     res.json({ 
@@ -342,7 +386,26 @@ app.post('/api/remove-artist-songs', refreshTokenIfNeeded, async (req, res) => {
     });
   } catch (error) {
     console.error('Error removing artist songs:', error);
-    res.status(500).json({ error: 'Failed to remove artist songs' });
+    console.error('Error status:', error.statusCode);
+    console.error('Error body:', error.body);
+    console.error('Error message:', error.message);
+    
+    let errorMessage = 'Failed to remove artist songs';
+    
+    if (error.statusCode === 401) {
+      errorMessage = 'Authentication expired. Please log in again.';
+    } else if (error.statusCode === 403) {
+      errorMessage = 'Permission denied. Please check app permissions.';
+    } else if (error.body && error.body.error && error.body.error.message) {
+      errorMessage = error.body.error.message;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    res.status(error.statusCode || 500).json({ 
+      success: false,
+      error: errorMessage 
+    });
   }
 });
 
