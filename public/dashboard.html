@@ -80,15 +80,11 @@
           </div>
           <div class="flex flex-1 justify-end gap-8">
             <div class="flex items-center gap-9">
-              <a class="text-white text-sm font-medium leading-normal" href="/">Home</a>
-              <span class="text-[#38e07b] text-sm font-medium leading-normal" id="user-info">Loading...</span>
+              <button class="text-white text-sm font-medium leading-normal hover:text-[#38e07b] transition-colors" onclick="goHome()">Home</button>
+              <div id="user-profile-section">
+                <span class="text-[#38e07b] text-sm font-medium leading-normal" id="user-info">Loading...</span>
+              </div>
             </div>
-            <button
-              class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#29382f] text-white text-sm font-bold leading-normal tracking-[0.015em]"
-              onclick="logout()"
-            >
-              <span class="truncate">Log Out</span>
-            </button>
           </div>
         </header>
         
@@ -681,8 +677,41 @@
         });
       }
       
+      // Go home function
+      function goHome() {
+        window.location.href = '/';
+      }
+      
+      // Toggle profile dropdown
+      function toggleProfileDropdown() {
+        const dropdown = document.getElementById('profile-dropdown');
+        if (dropdown) {
+          dropdown.classList.toggle('hidden');
+        }
+      }
+      
+      // Close profile dropdown
+      function closeProfileDropdown() {
+        const dropdown = document.getElementById('profile-dropdown');
+        if (dropdown) {
+          dropdown.classList.add('hidden');
+        }
+      }
+      
+      // Platform connection functions
+      function connectAppleMusic() {
+        closeProfileDropdown();
+        window.location.href = '/apple-music-login';
+      }
+      
+      function connectAmazonMusic() {
+        closeProfileDropdown();
+        window.location.href = '/amazon-music-login';
+      }
+      
       // Logout function
       function logout() {
+        closeProfileDropdown();
         fetch('/api/logout', { method: 'POST' })
           .then(() => window.location.href = '/')
           .catch(() => window.location.href = '/');
@@ -693,9 +722,52 @@
         fetch('/api/user')
           .then(response => response.json())
           .then(user => {
-            const userInfo = document.getElementById('user-info');
-            if (userInfo && user.display_name) {
-              userInfo.textContent = 'Welcome, ' + user.display_name + '!';
+            const userProfileSection = document.getElementById('user-profile-section');
+            if (userProfileSection && user.display_name) {
+              const profileHTML = `
+                <div class="relative">
+                  <button
+                    onclick="toggleProfileDropdown()"
+                    class="flex items-center gap-2 bg-[#29382f] hover:bg-[#1a1a1a] text-white px-3 py-2 rounded-full transition-all duration-200"
+                  >
+                    ${user.images && user.images[0] ? 
+                      '<img src="' + user.images[0].url + '" alt="' + user.display_name + '" class="w-8 h-8 rounded-full border-2 border-[#38e07b]">' : 
+                      '<div class="w-8 h-8 bg-[#38e07b] rounded-full flex items-center justify-center"><span class="text-[#111714] text-sm font-bold">' + user.display_name.charAt(0).toUpperCase() + '</span></div>'
+                    }
+                    <span class="text-white text-sm font-medium">${user.display_name}</span>
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </button>
+                  
+                  <!-- Profile Dropdown -->
+                  <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-[#29382f] rounded-lg shadow-lg border border-[#38e07b] z-50">
+                    <div class="py-2">
+                      <div class="px-4 py-2 text-sm text-gray-300 border-b border-[#38e07b]">
+                        <div class="font-medium">${user.display_name}</div>
+                        <div class="text-xs">Spotify Connected</div>
+                      </div>
+                      
+                      <button onclick="connectAppleMusic()" class="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#FA243C] hover:text-white transition-colors flex items-center gap-2">
+                        <div class="w-4 h-4 bg-[#FA243C] rounded-full flex items-center justify-center text-xs text-white">A</div>
+                        Connect Apple Music
+                      </button>
+                      
+                      <button onclick="connectAmazonMusic()" class="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#FF9900] hover:text-white transition-colors flex items-center gap-2">
+                        <div class="w-4 h-4 bg-[#FF9900] rounded-full flex items-center justify-center text-xs text-white">A</div>
+                        Connect Amazon Music
+                      </button>
+                      
+                      <div class="border-t border-[#38e07b] mt-2 pt-2">
+                        <button onclick="logout()" class="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900 hover:text-white transition-colors">
+                          Logout
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `;
+              userProfileSection.innerHTML = profileHTML;
             }
           })
           .catch(error => {
@@ -710,6 +782,9 @@
       window.removeArtistSongs = removeArtistSongs;
       window.importPlaylist = importPlaylist;
       window.exportPlaylist = exportPlaylist;
+      window.goHome = goHome;
+      window.toggleProfileDropdown = toggleProfileDropdown;
+      window.closeProfileDropdown = closeProfileDropdown;
       window.connectAppleMusic = connectAppleMusic;
       window.connectAmazonMusic = connectAmazonMusic;
       window.logout = logout;
@@ -726,6 +801,16 @@
         if (feature) {
           showFeature(feature);
         }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+          const dropdown = document.getElementById('profile-dropdown');
+          const profileButton = document.querySelector('[onclick="toggleProfileDropdown()"]');
+          
+          if (dropdown && !dropdown.contains(event.target) && !profileButton.contains(event.target)) {
+            closeProfileDropdown();
+          }
+        });
       });
     </script>
   </body>

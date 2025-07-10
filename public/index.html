@@ -73,15 +73,18 @@
           </div>
           <div class="flex flex-1 justify-end gap-8">
             <div class="flex items-center gap-9">
-              <a class="text-white text-sm font-medium leading-normal" href="#">Home</a>
+              <button class="text-white text-sm font-medium leading-normal hover:text-[#38e07b] transition-colors" onclick="goHome()">Home</button>
               <button class="text-white text-sm font-medium leading-normal hover:text-[#38e07b] transition-colors" onclick="showAbout()">About</button>
             </div>
-            <button
-              class="btn-animated flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#38e07b] text-[#111714] text-sm font-bold leading-normal tracking-[0.015em] hover:shadow-lg transform transition-all duration-200"
-              onclick="handleLoginClick()"
-            >
-              <span class="truncate">Log In</span>
-            </button>
+            <div id="auth-section">
+              <button
+                class="btn-animated flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#38e07b] text-[#111714] text-sm font-bold leading-normal tracking-[0.015em] hover:shadow-lg transform transition-all duration-200"
+                onclick="handleLoginClick()"
+                id="login-btn"
+              >
+                <span class="truncate">Log In</span>
+              </button>
+            </div>
           </div>
         </header>
         <div class="px-40 flex flex-1 justify-center py-5">
@@ -176,6 +179,11 @@
         }
       }
       
+      // GO HOME FUNCTION
+      function goHome() {
+        window.location.href = '/';
+      }
+      
       // SHOW ABOUT SECTION
       function showAbout() {
         const aboutSection = document.getElementById('about');
@@ -185,8 +193,36 @@
         }
       }
       
+      // TOGGLE PROFILE DROPDOWN
+      function toggleProfileDropdown() {
+        const dropdown = document.getElementById('profile-dropdown');
+        if (dropdown) {
+          dropdown.classList.toggle('hidden');
+        }
+      }
+      
+      // CLOSE PROFILE DROPDOWN
+      function closeProfileDropdown() {
+        const dropdown = document.getElementById('profile-dropdown');
+        if (dropdown) {
+          dropdown.classList.add('hidden');
+        }
+      }
+      
+      // PLATFORM CONNECTION FUNCTIONS
+      function connectAppleMusic() {
+        closeProfileDropdown();
+        window.location.href = '/apple-music-login';
+      }
+      
+      function connectAmazonMusic() {
+        closeProfileDropdown();
+        window.location.href = '/amazon-music-login';
+      }
+      
       // LOGOUT FUNCTION
       function logout() {
+        closeProfileDropdown();
         fetch('/api/logout', { method: 'POST' })
           .then(function() { window.location.reload(); })
           .catch(function() { window.location.reload(); });
@@ -215,15 +251,52 @@
       
       // UPDATE LOGIN BUTTON WITH USER PROFILE
       function updateLoginButton(user) {
-        var loginButton = document.querySelector('button[onclick="handleLoginClick()"]');
-        if (loginButton && user && user.display_name) {
-          var profileHTML = '<div class="flex items-center gap-2">' +
-            (user.images && user.images[0] ? 
-              '<img src="' + user.images[0].url + '" alt="' + user.display_name + '" class="w-8 h-8 rounded-full border-2 border-[#38e07b]"> ' : '') +
-            '<span class="text-white text-sm font-medium">' + user.display_name + '</span>' +
-            '<button onclick="logout()" class="ml-2 text-xs text-[#38e07b] hover:text-white transition-colors">Logout</button>' +
-            '</div>';
-          loginButton.outerHTML = profileHTML;
+        var authSection = document.getElementById('auth-section');
+        if (authSection && user && user.display_name) {
+          var profileHTML = `
+            <div class="relative">
+              <button
+                onclick="toggleProfileDropdown()"
+                class="flex items-center gap-2 bg-[#29382f] hover:bg-[#1a1a1a] text-white px-3 py-2 rounded-full transition-all duration-200"
+              >
+                ${user.images && user.images[0] ? 
+                  '<img src="' + user.images[0].url + '" alt="' + user.display_name + '" class="w-8 h-8 rounded-full border-2 border-[#38e07b]">' : 
+                  '<div class="w-8 h-8 bg-[#38e07b] rounded-full flex items-center justify-center"><span class="text-[#111714] text-sm font-bold">' + user.display_name.charAt(0).toUpperCase() + '</span></div>'
+                }
+                <span class="text-white text-sm font-medium">${user.display_name}</span>
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+              
+              <!-- Profile Dropdown -->
+              <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-[#29382f] rounded-lg shadow-lg border border-[#38e07b] z-50">
+                <div class="py-2">
+                  <div class="px-4 py-2 text-sm text-gray-300 border-b border-[#38e07b]">
+                    <div class="font-medium">${user.display_name}</div>
+                    <div class="text-xs">Spotify Connected</div>
+                  </div>
+                  
+                  <button onclick="connectAppleMusic()" class="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#FA243C] hover:text-white transition-colors flex items-center gap-2">
+                    <div class="w-4 h-4 bg-[#FA243C] rounded-full flex items-center justify-center text-xs text-white">A</div>
+                    Connect Apple Music
+                  </button>
+                  
+                  <button onclick="connectAmazonMusic()" class="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#FF9900] hover:text-white transition-colors flex items-center gap-2">
+                    <div class="w-4 h-4 bg-[#FF9900] rounded-full flex items-center justify-center text-xs text-white">A</div>
+                    Connect Amazon Music
+                  </button>
+                  
+                  <div class="border-t border-[#38e07b] mt-2 pt-2">
+                    <button onclick="logout()" class="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900 hover:text-white transition-colors">
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+          authSection.innerHTML = profileHTML;
         }
       }
       
@@ -231,6 +304,11 @@
       window.handleLoginClick = handleLoginClick;
       window.handleFeatureClick = handleFeatureClick; 
       window.showAbout = showAbout;
+      window.goHome = goHome;
+      window.toggleProfileDropdown = toggleProfileDropdown;
+      window.closeProfileDropdown = closeProfileDropdown;
+      window.connectAppleMusic = connectAppleMusic;
+      window.connectAmazonMusic = connectAmazonMusic;
       window.logout = logout;
       
       console.log('JavaScript functions loaded!');
@@ -245,6 +323,16 @@
         setTimeout(function() {
           loadUserProfile();
         }, 500);
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+          const dropdown = document.getElementById('profile-dropdown');
+          const profileButton = document.querySelector('[onclick="toggleProfileDropdown()"]');
+          
+          if (dropdown && !dropdown.contains(event.target) && !profileButton.contains(event.target)) {
+            closeProfileDropdown();
+          }
+        });
       });
     </script>
   </body>
