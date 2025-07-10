@@ -1,5 +1,4 @@
 const axios = require('axios');
-const MusicKit = require('music-kit');
 
 class CrossPlatformService {
   constructor() {
@@ -19,11 +18,11 @@ class CrossPlatformService {
   // Initialize Apple Music API
   async initAppleMusic(developerToken, userToken) {
     try {
-      this.appleMusicApi = new MusicKit({
+      this.appleMusicApi = {
         developerToken: developerToken,
-        userToken: userToken
-      });
-      await this.appleMusicApi.authorize();
+        userToken: userToken,
+        baseURL: 'https://api.music.apple.com/v1'
+      };
     } catch (error) {
       console.error('Apple Music initialization failed:', error);
       throw error;
@@ -105,10 +104,15 @@ class CrossPlatformService {
     }
 
     try {
-      const playlist = await this.appleMusicApi.api.playlist(playlistId);
-      const tracks = await this.appleMusicApi.api.playlist(playlistId, { include: 'tracks' });
-      
-      return tracks.data[0].relationships.tracks.data.map(track => ({
+      const response = await axios.get(`${this.appleMusicApi.baseURL}/catalog/us/playlists/${playlistId}`, {
+        headers: {
+          'Authorization': `Bearer ${this.appleMusicApi.developerToken}`,
+          'Music-User-Token': this.appleMusicApi.userToken,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      return response.data.data[0].relationships.tracks.data.map(track => ({
         name: track.attributes.name,
         artist: track.attributes.artistName,
         album: track.attributes.albumName,
@@ -211,20 +215,36 @@ class CrossPlatformService {
 
     try {
       // Create playlist
-      const playlist = await this.appleMusicApi.api.createPlaylist({
+      const createResponse = await axios.post(`${this.appleMusicApi.baseURL}/me/library/playlists`, {
         attributes: {
           name: playlistName,
           description: 'Playlist exported from Spotify using Fuzic'
         }
+      }, {
+        headers: {
+          'Authorization': `Bearer ${this.appleMusicApi.developerToken}`,
+          'Music-User-Token': this.appleMusicApi.userToken,
+          'Content-Type': 'application/json'
+        }
       });
+
+      const playlistId = createResponse.data.data[0].id;
 
       // Add tracks
       const trackIds = tracks.map(track => track.uri);
-      await this.appleMusicApi.api.addToPlaylist(playlist.data[0].id, trackIds);
+      await axios.post(`${this.appleMusicApi.baseURL}/me/library/playlists/${playlistId}/tracks`, {
+        data: trackIds.map(id => ({ id, type: 'songs' }))
+      }, {
+        headers: {
+          'Authorization': `Bearer ${this.appleMusicApi.developerToken}`,
+          'Music-User-Token': this.appleMusicApi.userToken,
+          'Content-Type': 'application/json'
+        }
+      });
 
       return {
         success: true,
-        playlist: playlist.data[0],
+        playlist: createResponse.data.data[0],
         tracksAdded: trackIds.length
       };
     } catch (error) {
