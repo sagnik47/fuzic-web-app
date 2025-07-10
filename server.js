@@ -207,34 +207,74 @@ app.post('/api/convert-liked-to-playlist', refreshTokenIfNeeded, async (req, res
     // Create playlist
     const playlistName = `Liked Songs - ${new Date().toLocaleDateString()}`;
     console.log('Creating playlist:', playlistName);
+    console.log('User ID for playlist creation:', userId);
     
-    const playlistResponse = await spotifyApi.createPlaylist(userId, playlistName, {
-      description: 'Playlist created from liked songs using Fuzic',
-      public: false
-    });
-    
-    if (!playlistResponse || !playlistResponse.body) {
-      throw new Error('Spotify API did not return a playlist object. Response: ' + JSON.stringify(playlistResponse));
+    // Verify access token is set
+    const currentAccessToken = spotifyApi.getAccessToken();
+    console.log('Current access token exists:', !!currentAccessToken);
+    if (!currentAccessToken) {
+      throw new Error('No access token available for playlist creation');
     }
     
-    const playlistId = playlistResponse.body.id;
-    console.log('Playlist created:', playlistId);
-    
-    // Add tracks to playlist
-    if (trackUris.length > 0) {
-      console.log('Adding tracks to playlist...');
-      const addTracksResponse = await spotifyApi.addTracksToPlaylist(playlistId, trackUris);
-      if (!addTracksResponse || !addTracksResponse.body) {
-        throw new Error('Failed to add tracks to playlist');
+    try {
+      // Create playlist with explicit options
+      const playlistOptions = {
+        description: 'Playlist created from liked songs using Fuzic',
+        public: false
+      };
+      
+      console.log('Creating playlist with options:', playlistOptions);
+      
+      // Use a promise-based approach to handle the API call
+      const playlistResponse = await new Promise((resolve, reject) => {
+        spotifyApi.createPlaylist(userId, playlistName, playlistOptions)
+          .then(response => {
+            console.log('Playlist creation successful:', response);
+            resolve(response);
+          })
+          .catch(error => {
+            console.error('Playlist creation failed:', error);
+            reject(error);
+          });
+      });
+      
+      console.log('Raw playlist response:', playlistResponse);
+      console.log('Response type:', typeof playlistResponse);
+      console.log('Response keys:', playlistResponse ? Object.keys(playlistResponse) : 'undefined');
+      
+      if (!playlistResponse) {
+        throw new Error('Spotify API createPlaylist returned null/undefined');
       }
-      console.log('Tracks added successfully');
+      
+      if (!playlistResponse.body) {
+        console.log('Response without body:', playlistResponse);
+        throw new Error('Spotify API createPlaylist returned response without body. Full response: ' + JSON.stringify(playlistResponse));
+      }
+      
+      const playlistId = playlistResponse.body.id;
+      console.log('Playlist created successfully with ID:', playlistId);
+      
+      // Add tracks to playlist
+      if (trackUris.length > 0) {
+        console.log('Adding tracks to playlist...');
+        const addTracksResponse = await spotifyApi.addTracksToPlaylist(playlistId, trackUris);
+        if (!addTracksResponse || !addTracksResponse.body) {
+          throw new Error('Failed to add tracks to playlist');
+        }
+        console.log('Tracks added successfully');
+      }
+      
+      res.json({ 
+        success: true, 
+        playlist: playlistResponse.body,
+        tracksAdded: trackUris.length 
+      });
+    } catch (playlistError) {
+      console.error('Playlist creation error:', playlistError);
+      console.error('Playlist error status:', playlistError.statusCode);
+      console.error('Playlist error body:', playlistError.body);
+      throw playlistError;
     }
-    
-    res.json({ 
-      success: true, 
-      playlist: playlistResponse.body,
-      tracksAdded: trackUris.length 
-    });
   } catch (error) {
     console.error('Detailed error converting liked songs:', error);
     console.error('Error status:', error.statusCode);
