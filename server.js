@@ -111,35 +111,43 @@ app.get('/login', (req, res) => {
 app.get('/callback', async (req, res) => {
   const { code, state } = req.query;
   const storedState = req.cookies ? req.cookies['spotify_auth_state'] : null;
-  
-  if (state === null || state !== storedState) {
-    res.redirect('/#error=state_mismatch');
-    return;
+
+  // Log for debugging
+  console.log('Callback hit. Query:', req.query);
+  console.log('Stored state:', storedState);
+
+  // If code or state is missing, redirect with error
+  if (!code || !state) {
+    return res.redirect('/#error=invalid_token');
   }
-  
+
+  if (state === null || state !== storedState) {
+    return res.redirect('/#error=state_mismatch');
+  }
+
   res.clearCookie('spotify_auth_state');
-  
+
   try {
     const data = await spotifyApi.authorizationCodeGrant(code);
     const { access_token, refresh_token } = data.body;
-    
+
     spotifyApi.setAccessToken(access_token);
     spotifyApi.setRefreshToken(refresh_token);
-    
+
     // Store tokens in cookies with proper security settings
-    res.cookie('access_token', access_token, { 
-      httpOnly: true, 
+    res.cookie('access_token', access_token, {
+      httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 3600000 // 1 hour
     });
-    res.cookie('refresh_token', refresh_token, { 
-      httpOnly: true, 
+    res.cookie('refresh_token', refresh_token, {
+      httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 2592000000 // 30 days
     });
-    
+
     res.redirect('/dashboard');
   } catch (error) {
     console.error('Error getting tokens:', error);
