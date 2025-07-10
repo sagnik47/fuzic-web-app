@@ -74,7 +74,7 @@
           <div class="flex flex-1 justify-end gap-8">
             <div class="flex items-center gap-9">
               <a class="text-white text-sm font-medium leading-normal" href="#">Home</a>
-              <a class="text-white text-sm font-medium leading-normal" href="#about">About</a>
+              <button class="text-white text-sm font-medium leading-normal hover:text-[#38e07b] transition-colors" onclick="showAbout()">About</button>
             </div>
             <button
               class="btn-animated flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#38e07b] text-[#111714] text-sm font-bold leading-normal tracking-[0.015em] hover:shadow-lg transform transition-all duration-200"
@@ -110,6 +110,12 @@
                 >
                   <span class="truncate">Remove Artist's Songs</span>
                 </button>
+                <button
+                  class="btn-animated flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#29382f] text-white text-sm font-bold leading-normal tracking-[0.015em] w-full hover:shadow-lg transform transition-all duration-200"
+                  onclick="handleFeatureClick('cross-platform')"
+                >
+                  <span class="truncate">Cross-Platform Playlists</span>
+                </button>
               </div>
             </div>
           </div>
@@ -121,10 +127,10 @@
             <div class="text-center mb-8">
               <h2 class="text-white text-[32px] leading-tight mb-3" style="font-family: 'Caveat', cursive; font-weight: 600;">About fuzic</h2>
               <p class="text-[#38e07b] text-sm font-medium tracking-[0.2em] uppercase mb-4">WHERE MUSIC FUSES</p>
-              <p class="text-white text-base max-w-2xl mx-auto">fuzic is a powerful Spotify playlist management tool that helps you organize your music library with ease. Where different playlists, songs, and musical experiences come together seamlessly.</p>
+              <p class="text-white text-base max-w-2xl mx-auto">fuzic is a powerful cross-platform music management tool that helps you organize your music library across Spotify, Apple Music, and Amazon Music. Where different playlists, songs, and musical experiences come together seamlessly.</p>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div class="bg-[#29382f] p-6 rounded-lg text-center">
                 <h3 class="text-[#38e07b] text-lg font-bold mb-3">🎯 Convert Liked Songs</h3>
                 <p class="text-white text-sm">Transform your liked songs into organized playlists with just one click.</p>
@@ -138,6 +144,11 @@
               <div class="bg-[#29382f] p-6 rounded-lg text-center">
                 <h3 class="text-[#38e07b] text-lg font-bold mb-3">🚫 Remove Artist Songs</h3>
                 <p class="text-white text-sm">Quickly remove all songs by specific artists from any playlist.</p>
+              </div>
+              
+              <div class="bg-[#29382f] p-6 rounded-lg text-center">
+                <h3 class="text-[#38e07b] text-lg font-bold mb-3">🌐 Cross-Platform</h3>
+                <p class="text-white text-sm">Transfer playlists between Spotify, Apple Music, and Amazon Music seamlessly.</p>
               </div>
             </div>
           </div>
@@ -162,6 +173,15 @@
         } else {
           // Logged in, go to dashboard with feature
           window.location.href = '/dashboard?feature=' + feature;
+        }
+      }
+      
+      // SHOW ABOUT SECTION
+      function showAbout() {
+        const aboutSection = document.getElementById('about');
+        if (aboutSection) {
+          aboutSection.classList.remove('hidden');
+          aboutSection.scrollIntoView({ behavior: 'smooth' });
         }
       }
       
@@ -210,6 +230,7 @@
       // MAKE FUNCTIONS GLOBAL - CRITICAL!
       window.handleLoginClick = handleLoginClick;
       window.handleFeatureClick = handleFeatureClick; 
+      window.showAbout = showAbout;
       window.logout = logout;
       
       console.log('JavaScript functions loaded!');
