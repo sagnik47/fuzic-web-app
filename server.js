@@ -23,7 +23,7 @@ app.use(express.static('public'));
 const spotifyApi = new SpotifyWebApi({
   clientId: process.env.SPOTIFY_CLIENT_ID,
   clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
-  redirectUri: process.env.SPOTIFY_REDIRECT_URI || 'https://fuzic-web-app.vercel.app/callback'
+  redirectUri: process.env.SPOTIFY_REDIRECT_URI || 'https://fuzic.vercel.app/callback'
 });
 
 // Token refresh middleware
