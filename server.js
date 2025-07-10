@@ -202,23 +202,26 @@ app.post('/api/convert-liked-to-playlist', refreshTokenIfNeeded, async (req, res
     const playlistName = `Liked Songs - ${new Date().toLocaleDateString()}`;
     console.log('Creating playlist:', playlistName);
     
-    const playlist = await spotifyApi.createPlaylist(userId, playlistName, {
+    const playlistResponse = await spotifyApi.createPlaylist(userId, playlistName, {
       description: 'Playlist created from liked songs using Fuzic',
       public: false
     });
-    
-    console.log('Playlist created:', playlist.body.id);
+    if (!playlistResponse || !playlistResponse.body) {
+      throw new Error('Spotify API did not return a playlist object.');
+    }
+    const playlistId = playlistResponse.body.id;
+    console.log('Playlist created:', playlistId);
     
     // Add tracks to playlist
     if (trackUris.length > 0) {
       console.log('Adding tracks to playlist...');
-      await spotifyApi.addTracksToPlaylist(playlist.body.id, trackUris);
+      await spotifyApi.addTracksToPlaylist(playlistId, trackUris);
       console.log('Tracks added successfully');
     }
     
     res.json({ 
       success: true, 
-      playlist: playlist.body,
+      playlist: playlistResponse.body,
       tracksAdded: trackUris.length 
     });
   } catch (error) {
@@ -268,8 +271,11 @@ app.post('/api/merge-playlists', refreshTokenIfNeeded, async (req, res) => {
     const seenTrackIds = new Set();
     
     for (const playlistId of playlistIds) {
-      const playlist = await spotifyApi.getPlaylistTracks(playlistId);
-      const tracks = playlist.body.items
+      const playlistResponse = await spotifyApi.getPlaylistTracks(playlistId);
+      if (!playlistResponse || !playlistResponse.body) {
+        throw new Error('Spotify API did not return playlist tracks.');
+      }
+      const tracks = playlistResponse.body.items
         .filter(item => item.track && !seenTrackIds.has(item.track.id))
         .map(item => {
           seenTrackIds.add(item.track.id);
@@ -279,21 +285,24 @@ app.post('/api/merge-playlists', refreshTokenIfNeeded, async (req, res) => {
     }
     
     // Create new playlist
-    const playlist = await spotifyApi.createPlaylist(userId, newPlaylistName, {
+    const newPlaylistResponse = await spotifyApi.createPlaylist(userId, newPlaylistName, {
       description: 'Merged playlist created using Fuzic',
       public: false
     });
-    
+    if (!newPlaylistResponse || !newPlaylistResponse.body) {
+      throw new Error('Spotify API did not return a playlist object.');
+    }
+    const newPlaylistId = newPlaylistResponse.body.id;
     // Add tracks to new playlist (Spotify API limits to 100 tracks per request)
     const batchSize = 100;
     for (let i = 0; i < allTracks.length; i += batchSize) {
       const batch = allTracks.slice(i, i + batchSize);
-      await spotifyApi.addTracksToPlaylist(playlist.body.id, batch);
+      await spotifyApi.addTracksToPlaylist(newPlaylistId, batch);
     }
     
     res.json({ 
       success: true, 
-      playlist: playlist.body,
+      playlist: newPlaylistResponse.body,
       tracksAdded: allTracks.length 
     });
   } catch (error) {
@@ -308,10 +317,12 @@ app.post('/api/remove-artist-songs', refreshTokenIfNeeded, async (req, res) => {
     const { playlistId, artistName } = req.body;
     
     // Get playlist tracks
-    const playlist = await spotifyApi.getPlaylistTracks(playlistId);
-    
+    const playlistResponse = await spotifyApi.getPlaylistTracks(playlistId);
+    if (!playlistResponse || !playlistResponse.body) {
+      throw new Error('Spotify API did not return playlist tracks.');
+    }
     // Find tracks by the specified artist
-    const tracksToRemove = playlist.body.items
+    const tracksToRemove = playlistResponse.body.items
       .filter(item => 
         item.track && 
         item.track.artists.some(artist => 

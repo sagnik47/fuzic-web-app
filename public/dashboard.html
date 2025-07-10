@@ -228,9 +228,7 @@
                       <!-- Spotify Status -->
                       <div class="flex items-center justify-between p-3 bg-[#1DB954] bg-opacity-20 rounded-lg border border-[#1DB954]">
                         <div class="flex items-center">
-                          <div class="w-8 h-8 bg-[#1DB954] rounded-full flex items-center justify-center mr-3">
-                            <span class="text-white text-sm font-bold">S</span>
-                          </div>
+                          <img src="images/spotify.svg" alt="Spotify Logo" class="w-8 h-8 mr-3" />
                           <span class="text-white font-medium">Spotify</span>
                         </div>
                         <div class="text-[#1DB954] text-sm">✓ Connected</div>
@@ -239,9 +237,7 @@
                       <!-- Apple Music Status -->
                       <div class="flex items-center justify-between p-3 bg-[#FA243C] bg-opacity-20 rounded-lg border border-[#FA243C]" id="apple-music-status">
                         <div class="flex items-center">
-                          <div class="w-8 h-8 bg-[#FA243C] rounded-full flex items-center justify-center mr-3">
-                            <span class="text-white text-sm font-bold">A</span>
-                          </div>
+                          <img src="images/apple-music.svg" alt="Apple Music Logo" class="w-8 h-8 mr-3" />
                           <span class="text-white font-medium">Apple Music</span>
                         </div>
                         <div class="text-gray-400 text-sm" id="apple-music-text">Not Connected</div>
@@ -250,9 +246,7 @@
                       <!-- Amazon Music Status -->
                       <div class="flex items-center justify-between p-3 bg-[#FF9900] bg-opacity-20 rounded-lg border border-[#FF9900]" id="amazon-music-status">
                         <div class="flex items-center">
-                          <div class="w-8 h-8 bg-[#FF9900] rounded-full flex items-center justify-center mr-3">
-                            <span class="text-white text-sm font-bold">A</span>
-                          </div>
+                          <img src="images/amazon-music.svg" alt="Amazon Music Logo" class="w-8 h-8 mr-3" />
                           <span class="text-white font-medium">Amazon Music</span>
                         </div>
                         <div class="text-gray-400 text-sm" id="amazon-music-text">Not Connected</div>
@@ -261,17 +255,19 @@
                     
                     <div class="flex gap-3">
                       <button
-                        class="btn-animated flex-1 bg-[#FA243C] text-white px-4 py-2 rounded-full font-bold hover:bg-[#E01E35] transition-all duration-200 transform hover:scale-105"
+                        class="btn-animated flex-1 bg-[#FA243C] text-white px-4 py-2 rounded-full font-bold hover:bg-[#E01E35] transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-2"
                         onclick="connectAppleMusic()"
                         id="apple-music-btn"
                       >
+                        <img src="images/apple-music.svg" alt="Apple Music Logo" class="w-6 h-6 mr-2" />
                         Connect Apple Music
                       </button>
                       <button
-                        class="btn-animated flex-1 bg-[#FF9900] text-white px-4 py-2 rounded-full font-bold hover:bg-[#E68A00] transition-all duration-200 transform hover:scale-105"
+                        class="btn-animated flex-1 bg-[#FF9900] text-white px-4 py-2 rounded-full font-bold hover:bg-[#E68A00] transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-2"
                         onclick="connectAmazonMusic()"
                         id="amazon-music-btn"
                       >
+                        <img src="images/amazon-music.svg" alt="Amazon Music Logo" class="w-6 h-6 mr-2" />
                         Connect Amazon Music
                       </button>
                     </div>
