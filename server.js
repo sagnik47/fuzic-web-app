@@ -2,13 +2,19 @@ const express = require('express');
 const SpotifyWebApi = require('spotify-web-api-node');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const CrossPlatformService = require('./services/cross-platform');
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://fuzic-web-app.vercel.app', 'https://fuzic.vercel.app', 'https://your-new-domain.com']
+    : 'http://localhost:3000',
+  credentials: true
+}));
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.static('public'));
@@ -17,8 +23,52 @@ app.use(express.static('public'));
 const spotifyApi = new SpotifyWebApi({
   clientId: process.env.SPOTIFY_CLIENT_ID,
   clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
-  redirectUri: process.env.SPOTIFY_REDIRECT_URI
+  redirectUri: process.env.SPOTIFY_REDIRECT_URI || 'https://fuzic-web-app.vercel.app/callback'
 });
+
+// Token refresh middleware
+const refreshTokenIfNeeded = async (req, res, next) => {
+  const accessToken = req.cookies.access_token;
+  const refreshToken = req.cookies.refresh_token;
+  
+  if (!accessToken) {
+    return res.status(401).json({ error: 'No access token' });
+  }
+  
+  try {
+    spotifyApi.setAccessToken(accessToken);
+    spotifyApi.setRefreshToken(refreshToken);
+    
+    // Test the token by making a simple API call
+    await spotifyApi.getMe();
+    next();
+  } catch (error) {
+    if (error.statusCode === 401 && refreshToken) {
+      try {
+        const data = await spotifyApi.refreshAccessToken();
+        const newAccessToken = data.body.access_token;
+        
+        spotifyApi.setAccessToken(newAccessToken);
+        
+        // Update cookies
+        res.cookie('access_token', newAccessToken, { 
+          httpOnly: true, 
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax'
+        });
+        
+        next();
+      } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError);
+        res.clearCookie('access_token');
+        res.clearCookie('refresh_token');
+        res.status(401).json({ error: 'Authentication expired. Please log in again.' });
+      }
+    } else {
+      next(error);
+    }
+  }
+};
 
 // Generate a random string for state parameter
 const generateRandomString = (length) => {
@@ -38,9 +88,20 @@ app.get('/', (req, res) => {
 // Login route
 app.get('/login', (req, res) => {
   const state = generateRandomString(16);
-  const scope = ['user-library-read', 'playlist-read-private', 'playlist-modify-private', 'playlist-modify-public'];
+  const scope = [
+    'user-library-read', 
+    'playlist-read-private', 
+    'playlist-modify-private', 
+    'playlist-modify-public',
+    'user-read-private',
+    'user-read-email'
+  ];
   
-  res.cookie('spotify_auth_state', state);
+  res.cookie('spotify_auth_state', state, { 
+    httpOnly: true, 
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax'
+  });
   
   const authorizeURL = spotifyApi.createAuthorizeURL(scope, state);
   res.redirect(authorizeURL);
@@ -65,9 +126,19 @@ app.get('/callback', async (req, res) => {
     spotifyApi.setAccessToken(access_token);
     spotifyApi.setRefreshToken(refresh_token);
     
-    // Store tokens in cookies (in production, use secure storage)
-    res.cookie('access_token', access_token, { httpOnly: true });
-    res.cookie('refresh_token', refresh_token, { httpOnly: true });
+    // Store tokens in cookies with proper security settings
+    res.cookie('access_token', access_token, { 
+      httpOnly: true, 
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 3600000 // 1 hour
+    });
+    res.cookie('refresh_token', refresh_token, { 
+      httpOnly: true, 
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 2592000000 // 30 days
+    });
     
     res.redirect('/dashboard');
   } catch (error) {
@@ -84,14 +155,8 @@ app.get('/dashboard', (req, res) => {
 // API Routes
 
 // Get user's liked songs
-app.get('/api/liked-songs', async (req, res) => {
+app.get('/api/liked-songs', refreshTokenIfNeeded, async (req, res) => {
   try {
-    const accessToken = req.cookies.access_token;
-    if (!accessToken) {
-      return res.status(401).json({ error: 'No access token' });
-    }
-    
-    spotifyApi.setAccessToken(accessToken);
     const data = await spotifyApi.getMySavedTracks({ limit: 50 });
     res.json(data.body);
   } catch (error) {
@@ -101,16 +166,9 @@ app.get('/api/liked-songs', async (req, res) => {
 });
 
 // Convert liked songs to playlist
-app.post('/api/convert-liked-to-playlist', async (req, res) => {
+app.post('/api/convert-liked-to-playlist', refreshTokenIfNeeded, async (req, res) => {
   try {
-    const accessToken = req.cookies.access_token;
-    console.log('Convert API called, has token:', !!accessToken);
-    
-    if (!accessToken) {
-      return res.status(401).json({ error: 'No access token' });
-    }
-    
-    spotifyApi.setAccessToken(accessToken);
+    console.log('Convert API called');
     
     // Get user info
     console.log('Getting user info...');
@@ -178,14 +236,8 @@ app.post('/api/convert-liked-to-playlist', async (req, res) => {
 });
 
 // Get user's playlists
-app.get('/api/playlists', async (req, res) => {
+app.get('/api/playlists', refreshTokenIfNeeded, async (req, res) => {
   try {
-    const accessToken = req.cookies.access_token;
-    if (!accessToken) {
-      return res.status(401).json({ error: 'No access token' });
-    }
-    
-    spotifyApi.setAccessToken(accessToken);
     const data = await spotifyApi.getUserPlaylists({ limit: 50 });
     res.json(data.body);
   } catch (error) {
@@ -195,16 +247,9 @@ app.get('/api/playlists', async (req, res) => {
 });
 
 // Merge playlists
-app.post('/api/merge-playlists', async (req, res) => {
+app.post('/api/merge-playlists', refreshTokenIfNeeded, async (req, res) => {
   try {
     const { playlistIds, newPlaylistName } = req.body;
-    const accessToken = req.cookies.access_token;
-    
-    if (!accessToken) {
-      return res.status(401).json({ error: 'No access token' });
-    }
-    
-    spotifyApi.setAccessToken(accessToken);
     
     // Get user info
     const userInfo = await spotifyApi.getMe();
@@ -250,16 +295,9 @@ app.post('/api/merge-playlists', async (req, res) => {
 });
 
 // Remove artist's songs from playlist
-app.post('/api/remove-artist-songs', async (req, res) => {
+app.post('/api/remove-artist-songs', refreshTokenIfNeeded, async (req, res) => {
   try {
     const { playlistId, artistName } = req.body;
-    const accessToken = req.cookies.access_token;
-    
-    if (!accessToken) {
-      return res.status(401).json({ error: 'No access token' });
-    }
-    
-    spotifyApi.setAccessToken(accessToken);
     
     // Get playlist tracks
     const playlist = await spotifyApi.getPlaylistTracks(playlistId);
@@ -290,19 +328,244 @@ app.post('/api/remove-artist-songs', async (req, res) => {
 });
 
 // Get user profile
-app.get('/api/user', async (req, res) => {
+app.get('/api/user', refreshTokenIfNeeded, async (req, res) => {
   try {
-    const accessToken = req.cookies.access_token;
-    if (!accessToken) {
-      return res.status(401).json({ error: 'No access token' });
-    }
-    
-    spotifyApi.setAccessToken(accessToken);
     const userInfo = await spotifyApi.getMe();
     res.json(userInfo.body);
   } catch (error) {
     console.error('Error fetching user info:', error);
     res.status(500).json({ error: 'Failed to fetch user info' });
+  }
+});
+
+// Cross-platform playlist features
+app.post('/api/import-playlist', refreshTokenIfNeeded, async (req, res) => {
+  try {
+    const { playlistUrl, playlistName } = req.body;
+    
+    const crossPlatformService = new CrossPlatformService();
+    crossPlatformService.initSpotify(req.cookies.access_token);
+    
+    // Parse the playlist URL to determine platform
+    const { platform, playlistId } = crossPlatformService.parsePlaylistUrl(playlistUrl);
+    
+    // Get tracks from source platform
+    let tracks;
+    if (platform === 'spotify') {
+      tracks = await crossPlatformService.getSpotifyPlaylistTracks(playlistId);
+    } else if (platform === 'apple') {
+      // Initialize Apple Music API if needed
+      if (req.cookies.apple_music_token) {
+        await crossPlatformService.initAppleMusic(
+          process.env.APPLE_MUSIC_DEVELOPER_TOKEN,
+          req.cookies.apple_music_token
+        );
+        tracks = await crossPlatformService.getAppleMusicPlaylistTracks(playlistId);
+      } else {
+        return res.status(401).json({ 
+          success: false, 
+          error: 'Apple Music authentication required. Please log in to Apple Music first.' 
+        });
+      }
+    } else if (platform === 'amazon') {
+      // Initialize Amazon Music API if needed
+      if (req.cookies.amazon_music_token) {
+        await crossPlatformService.initAmazonMusic(req.cookies.amazon_music_token);
+        tracks = await crossPlatformService.getAmazonMusicPlaylistTracks(playlistId);
+      } else {
+        return res.status(401).json({ 
+          success: false, 
+          error: 'Amazon Music authentication required. Please log in to Amazon Music first.' 
+        });
+      }
+    }
+    
+    // Search for tracks on Spotify and create playlist
+    const spotifyTrackUris = await crossPlatformService.searchSpotifyTracks(tracks);
+    
+    if (spotifyTrackUris.length === 0) {
+      return res.json({ 
+        success: false, 
+        error: 'No tracks found on Spotify. Please check the playlist URL.' 
+      });
+    }
+    
+    // Get user info and create playlist
+    const userInfo = await spotifyApi.getMe();
+    const result = await crossPlatformService.createSpotifyPlaylist(
+      userInfo.body.id,
+      playlistName,
+      spotifyTrackUris
+    );
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error importing playlist:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message || 'Failed to import playlist' 
+    });
+  }
+});
+
+// Export playlist to other platforms
+app.post('/api/export-playlist', refreshTokenIfNeeded, async (req, res) => {
+  try {
+    const { platform, playlistId } = req.body;
+    
+    const crossPlatformService = new CrossPlatformService();
+    crossPlatformService.initSpotify(req.cookies.access_token);
+    
+    // Get playlist tracks from Spotify
+    const tracks = await crossPlatformService.getSpotifyPlaylistTracks(playlistId);
+    const playlist = await spotifyApi.getPlaylist(playlistId);
+    const playlistName = playlist.body.name;
+    
+    let result;
+    
+    if (platform === 'apple') {
+      if (!req.cookies.apple_music_token) {
+        return res.status(401).json({ 
+          success: false, 
+          error: 'Apple Music authentication required. Please log in to Apple Music first.' 
+        });
+      }
+      
+      await crossPlatformService.initAppleMusic(
+        process.env.APPLE_MUSIC_DEVELOPER_TOKEN,
+        req.cookies.apple_music_token
+      );
+      result = await crossPlatformService.exportToAppleMusic(playlistName, tracks);
+    } else if (platform === 'amazon') {
+      if (!req.cookies.amazon_music_token) {
+        return res.status(401).json({ 
+          success: false, 
+          error: 'Amazon Music authentication required. Please log in to Amazon Music first.' 
+        });
+      }
+      
+      await crossPlatformService.initAmazonMusic(req.cookies.amazon_music_token);
+      result = await crossPlatformService.exportToAmazonMusic(playlistName, tracks);
+    } else {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Unsupported platform' 
+      });
+    }
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error exporting playlist:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message || 'Failed to export playlist' 
+    });
+  }
+});
+
+// Apple Music authentication
+app.get('/apple-music-login', (req, res) => {
+  const state = generateRandomString(16);
+  const scope = 'playlist-read-private playlist-modify-private';
+  
+  res.cookie('apple_music_auth_state', state, { 
+    httpOnly: true, 
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax'
+  });
+  
+  const authorizeURL = `https://music.apple.com/authorize?client_id=${process.env.APPLE_MUSIC_CLIENT_ID}&redirect_uri=${process.env.APPLE_MUSIC_REDIRECT_URI}&response_type=code&scope=${scope}&state=${state}`;
+  res.redirect(authorizeURL);
+});
+
+// Apple Music callback
+app.get('/apple-music-callback', async (req, res) => {
+  const { code, state } = req.query;
+  const storedState = req.cookies ? req.cookies['apple_music_auth_state'] : null;
+  
+  if (state === null || state !== storedState) {
+    res.redirect('/#error=state_mismatch');
+    return;
+  }
+  
+  res.clearCookie('apple_music_auth_state');
+  
+  try {
+    // Exchange code for token (you'll need to implement this based on Apple Music API)
+    const tokenResponse = await axios.post('https://music.apple.com/token', {
+      client_id: process.env.APPLE_MUSIC_CLIENT_ID,
+      client_secret: process.env.APPLE_MUSIC_CLIENT_SECRET,
+      code: code,
+      grant_type: 'authorization_code',
+      redirect_uri: process.env.APPLE_MUSIC_REDIRECT_URI
+    });
+    
+    const { access_token } = tokenResponse.data;
+    
+    res.cookie('apple_music_token', access_token, { 
+      httpOnly: true, 
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 3600000 // 1 hour
+    });
+    
+    res.redirect('/dashboard?feature=cross-platform');
+  } catch (error) {
+    console.error('Error getting Apple Music tokens:', error);
+    res.redirect('/#error=apple_music_auth_failed');
+  }
+});
+
+// Amazon Music authentication
+app.get('/amazon-music-login', (req, res) => {
+  const state = generateRandomString(16);
+  const scope = 'music:playlist_read music:playlist_write';
+  
+  res.cookie('amazon_music_auth_state', state, { 
+    httpOnly: true, 
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax'
+  });
+  
+  const authorizeURL = `https://www.amazon.com/ap/oa?client_id=${process.env.AMAZON_MUSIC_CLIENT_ID}&scope=${scope}&response_type=code&redirect_uri=${process.env.AMAZON_MUSIC_REDIRECT_URI}&state=${state}`;
+  res.redirect(authorizeURL);
+});
+
+// Amazon Music callback
+app.get('/amazon-music-callback', async (req, res) => {
+  const { code, state } = req.query;
+  const storedState = req.cookies ? req.cookies['amazon_music_auth_state'] : null;
+  
+  if (state === null || state !== storedState) {
+    res.redirect('/#error=state_mismatch');
+    return;
+  }
+  
+  res.clearCookie('amazon_music_auth_state');
+  
+  try {
+    // Exchange code for token (you'll need to implement this based on Amazon Music API)
+    const tokenResponse = await axios.post('https://api.amazon.com/auth/o2/token', {
+      client_id: process.env.AMAZON_MUSIC_CLIENT_ID,
+      client_secret: process.env.AMAZON_MUSIC_CLIENT_SECRET,
+      code: code,
+      grant_type: 'authorization_code',
+      redirect_uri: process.env.AMAZON_MUSIC_REDIRECT_URI
+    });
+    
+    const { access_token } = tokenResponse.data;
+    
+    res.cookie('amazon_music_token', access_token, { 
+      httpOnly: true, 
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 3600000 // 1 hour
+    });
+    
+    res.redirect('/dashboard?feature=cross-platform');
+  } catch (error) {
+    console.error('Error getting Amazon Music tokens:', error);
+    res.redirect('/#error=amazon_music_auth_failed');
   }
 });
 

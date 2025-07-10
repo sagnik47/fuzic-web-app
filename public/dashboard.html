@@ -15,6 +15,26 @@
     <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <style>
+      .btn-animated {
+        transition: all 0.2s ease-in-out;
+        transform: scale(1);
+      }
+      .btn-animated:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      }
+      .btn-animated:active {
+        transform: scale(0.95);
+      }
+      .platform-status {
+        transition: all 0.3s ease-in-out;
+      }
+      .platform-status.connected {
+        background-color: rgba(56, 224, 123, 0.2);
+        border-color: #38e07b;
+      }
+    </style>
   </head>
   <body>
     <div class="relative flex size-full min-h-screen flex-col bg-[#111714] dark group/design-root overflow-x-hidden" style='font-family: "Spline Sans", "Noto Sans", sans-serif;'>
@@ -99,6 +119,13 @@
                   id="remove-btn"
                 >
                   <span class="truncate">Remove Artist's Songs</span>
+                </button>
+                <button
+                  class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#29382f] text-white text-sm font-bold leading-normal tracking-[0.015em] w-full"
+                  onclick="showFeature('cross-platform')"
+                  id="cross-platform-btn"
+                >
+                  <span class="truncate">Cross-Platform Playlists</span>
                 </button>
               </div>
             </div>
@@ -191,6 +218,137 @@
                   <div id="remove-result" class="mt-4"></div>
                 </div>
               </div>
+
+              <!-- Cross-Platform Playlists Feature -->
+              <div id="cross-platform-feature" class="feature-content hidden">
+                <div class="bg-[#29382f] p-6 rounded-lg">
+                  <h3 class="text-[#38e07b] text-xl font-bold mb-4">Cross-Platform Playlist Management</h3>
+                  <p class="text-white mb-4">Connect to multiple music platforms and transfer playlists between them seamlessly.</p>
+                  
+                  <!-- Platform Authentication Section -->
+                  <div class="mb-6 p-4 bg-[#111714] rounded-lg">
+                    <h4 class="text-[#38e07b] text-lg font-bold mb-3">Connect Music Platforms</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                      <!-- Spotify Status -->
+                      <div class="flex items-center justify-between p-3 bg-[#1DB954] bg-opacity-20 rounded-lg border border-[#1DB954]">
+                        <div class="flex items-center">
+                          <div class="w-8 h-8 bg-[#1DB954] rounded-full flex items-center justify-center mr-3">
+                            <span class="text-white text-sm font-bold">S</span>
+                          </div>
+                          <span class="text-white font-medium">Spotify</span>
+                        </div>
+                        <div class="text-[#1DB954] text-sm">✓ Connected</div>
+                      </div>
+                      
+                      <!-- Apple Music Status -->
+                      <div class="flex items-center justify-between p-3 bg-[#FA243C] bg-opacity-20 rounded-lg border border-[#FA243C]" id="apple-music-status">
+                        <div class="flex items-center">
+                          <div class="w-8 h-8 bg-[#FA243C] rounded-full flex items-center justify-center mr-3">
+                            <span class="text-white text-sm font-bold">A</span>
+                          </div>
+                          <span class="text-white font-medium">Apple Music</span>
+                        </div>
+                        <div class="text-gray-400 text-sm" id="apple-music-text">Not Connected</div>
+                      </div>
+                      
+                      <!-- Amazon Music Status -->
+                      <div class="flex items-center justify-between p-3 bg-[#FF9900] bg-opacity-20 rounded-lg border border-[#FF9900]" id="amazon-music-status">
+                        <div class="flex items-center">
+                          <div class="w-8 h-8 bg-[#FF9900] rounded-full flex items-center justify-center mr-3">
+                            <span class="text-white text-sm font-bold">A</span>
+                          </div>
+                          <span class="text-white font-medium">Amazon Music</span>
+                        </div>
+                        <div class="text-gray-400 text-sm" id="amazon-music-text">Not Connected</div>
+                      </div>
+                    </div>
+                    
+                    <div class="flex gap-3">
+                      <button
+                        class="btn-animated flex-1 bg-[#FA243C] text-white px-4 py-2 rounded-full font-bold hover:bg-[#E01E35] transition-all duration-200 transform hover:scale-105"
+                        onclick="connectAppleMusic()"
+                        id="apple-music-btn"
+                      >
+                        Connect Apple Music
+                      </button>
+                      <button
+                        class="btn-animated flex-1 bg-[#FF9900] text-white px-4 py-2 rounded-full font-bold hover:bg-[#E68A00] transition-all duration-200 transform hover:scale-105"
+                        onclick="connectAmazonMusic()"
+                        id="amazon-music-btn"
+                      >
+                        Connect Amazon Music
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <!-- Import Section -->
+                  <div class="mb-6 p-4 bg-[#111714] rounded-lg">
+                    <h4 class="text-[#38e07b] text-lg font-bold mb-3">Import to Spotify</h4>
+                    <p class="text-gray-300 text-sm mb-4">Paste a playlist URL from Apple Music or Amazon Music to import it to your Spotify account.</p>
+                    
+                    <div class="mb-4">
+                      <label class="text-white block mb-2">Playlist URL:</label>
+                      <input
+                        type="text"
+                        id="import-playlist-url"
+                        class="w-full p-2 rounded bg-[#111714] text-white border border-[#38e07b] focus:outline-none focus:ring-2 focus:ring-[#38e07b]"
+                        placeholder="https://music.apple.com/playlist/... or https://music.amazon.com/playlists/..."
+                      />
+                    </div>
+                    <div class="mb-4">
+                      <label class="text-white block mb-2">New Playlist Name:</label>
+                      <input
+                        type="text"
+                        id="import-playlist-name"
+                        class="w-full p-2 rounded bg-[#111714] text-white border border-[#38e07b] focus:outline-none focus:ring-2 focus:ring-[#38e07b]"
+                        placeholder="Enter playlist name..."
+                      />
+                    </div>
+                    <button
+                      class="btn-animated bg-[#38e07b] text-[#111714] px-6 py-2 rounded-full font-bold hover:bg-[#32d470] transition-all duration-200 transform hover:scale-105"
+                      onclick="importPlaylist()"
+                      id="import-action-btn"
+                    >
+                      Import Playlist
+                    </button>
+                    <div id="import-result" class="mt-4"></div>
+                  </div>
+
+                  <!-- Export Section -->
+                  <div class="p-4 bg-[#111714] rounded-lg">
+                    <h4 class="text-[#38e07b] text-lg font-bold mb-3">Export from Spotify</h4>
+                    <p class="text-gray-300 text-sm mb-4">Export your Spotify playlists to Apple Music or Amazon Music.</p>
+                    
+                    <div class="mb-4">
+                      <label class="text-white block mb-2">Select Playlist:</label>
+                      <select
+                        id="export-playlist-select"
+                        class="w-full p-2 rounded bg-[#111714] text-white border border-[#38e07b] focus:outline-none focus:ring-2 focus:ring-[#38e07b]"
+                      >
+                        <option value="">Loading playlists...</option>
+                      </select>
+                    </div>
+                    <div class="mb-4">
+                      <label class="text-white block mb-2">Target Platform:</label>
+                      <select
+                        id="export-platform"
+                        class="w-full p-2 rounded bg-[#111714] text-white border border-[#38e07b] focus:outline-none focus:ring-2 focus:ring-[#38e07b]"
+                      >
+                        <option value="apple">Apple Music</option>
+                        <option value="amazon">Amazon Music</option>
+                      </select>
+                    </div>
+                    <button
+                      class="btn-animated bg-[#38e07b] text-[#111714] px-6 py-2 rounded-full font-bold hover:bg-[#32d470] transition-all duration-200 transform hover:scale-105"
+                      onclick="exportPlaylist()"
+                      id="export-action-btn"
+                    >
+                      Export Playlist
+                    </button>
+                    <div id="export-result" class="mt-4"></div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -208,7 +366,7 @@
         features.forEach(f => f.classList.add('hidden'));
         
         // Reset button styles
-        const buttons = document.querySelectorAll('#convert-btn, #merge-btn, #remove-btn');
+        const buttons = document.querySelectorAll('#convert-btn, #merge-btn, #remove-btn, #cross-platform-btn');
         buttons.forEach(btn => {
           btn.className = btn.className.replace('bg-[#38e07b] text-[#111714]', 'bg-[#29382f] text-white');
         });
@@ -226,7 +384,7 @@
         }
         
         // Load data for specific features
-        if (featureName === 'merge' || featureName === 'remove') {
+        if (featureName === 'merge' || featureName === 'remove' || featureName === 'cross-platform') {
           loadPlaylists();
         }
       }
@@ -288,6 +446,15 @@
         const removeSelect = document.getElementById('remove-playlist-select');
         if (removeSelect) {
           removeSelect.innerHTML = '<option value="">Select a playlist...</option>' +
+            playlists.map(playlist => 
+              '<option value="' + playlist.id + '">' + playlist.name + ' (' + playlist.tracks.total + ' tracks)</option>'
+            ).join('');
+        }
+        
+        // Update export playlist select
+        const exportSelect = document.getElementById('export-playlist-select');
+        if (exportSelect) {
+          exportSelect.innerHTML = '<option value="">Select a playlist...</option>' +
             playlists.map(playlist => 
               '<option value="' + playlist.id + '">' + playlist.name + ' (' + playlist.tracks.total + ' tracks)</option>'
             ).join('');
@@ -387,6 +554,133 @@
         });
       }
       
+      // Platform authentication functions
+      function connectAppleMusic() {
+        window.location.href = '/apple-music-login';
+      }
+      
+      function connectAmazonMusic() {
+        window.location.href = '/amazon-music-login';
+      }
+      
+      // Check platform connection status
+      function checkPlatformStatus() {
+        // Check Apple Music connection
+        if (document.cookie.indexOf('apple_music_token') !== -1) {
+          const appleStatus = document.getElementById('apple-music-status');
+          const appleText = document.getElementById('apple-music-text');
+          const appleBtn = document.getElementById('apple-music-btn');
+          
+          appleStatus.classList.add('connected');
+          appleText.textContent = '✓ Connected';
+          appleText.className = 'text-[#38e07b] text-sm';
+          appleBtn.textContent = 'Connected';
+          appleBtn.disabled = true;
+          appleBtn.className = 'flex-1 bg-gray-600 text-gray-300 px-4 py-2 rounded-full font-bold cursor-not-allowed';
+        }
+        
+        // Check Amazon Music connection
+        if (document.cookie.indexOf('amazon_music_token') !== -1) {
+          const amazonStatus = document.getElementById('amazon-music-status');
+          const amazonText = document.getElementById('amazon-music-text');
+          const amazonBtn = document.getElementById('amazon-music-btn');
+          
+          amazonStatus.classList.add('connected');
+          amazonText.textContent = '✓ Connected';
+          amazonText.className = 'text-[#38e07b] text-sm';
+          amazonBtn.textContent = 'Connected';
+          amazonBtn.disabled = true;
+          amazonBtn.className = 'flex-1 bg-gray-600 text-gray-300 px-4 py-2 rounded-full font-bold cursor-not-allowed';
+        }
+      }
+      
+      // Cross-platform import function
+      function importPlaylist() {
+        const playlistUrl = document.getElementById('import-playlist-url').value;
+        const playlistName = document.getElementById('import-playlist-name').value;
+        const result = document.getElementById('import-result');
+        const btn = document.getElementById('import-action-btn');
+        
+        if (!playlistUrl.trim()) {
+          result.innerHTML = '<p class="text-red-400 font-medium">❌ Please enter a playlist URL</p>';
+          return;
+        }
+        
+        if (!playlistName.trim()) {
+          result.innerHTML = '<p class="text-red-400 font-medium">❌ Please enter a playlist name</p>';
+          return;
+        }
+        
+        btn.textContent = 'Importing...';
+        btn.disabled = true;
+        
+        fetch('/api/import-playlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            playlistUrl: playlistUrl,
+            playlistName: playlistName
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            result.innerHTML = '<p class="text-[#38e07b] font-medium">✅ Successfully imported playlist "' + data.playlist.name + '" with ' + data.tracksAdded + ' tracks!</p>';
+            document.getElementById('import-playlist-url').value = '';
+            document.getElementById('import-playlist-name').value = '';
+          } else {
+            result.innerHTML = '<p class="text-red-400 font-medium">❌ Error: ' + (data.error || 'Unknown error') + '</p>';
+          }
+        })
+        .catch(error => {
+          result.innerHTML = '<p class="text-red-400 font-medium">❌ Error: ' + error.message + '</p>';
+        })
+        .finally(() => {
+          btn.textContent = 'Import Playlist';
+          btn.disabled = false;
+        });
+      }
+      
+      // Cross-platform export function
+      function exportPlaylist() {
+        const playlistId = document.getElementById('export-playlist-select').value;
+        const platform = document.getElementById('export-platform').value;
+        const result = document.getElementById('export-result');
+        const btn = document.getElementById('export-action-btn');
+        
+        if (!playlistId) {
+          result.innerHTML = '<p class="text-red-400 font-medium">❌ Please select a playlist</p>';
+          return;
+        }
+        
+        btn.textContent = 'Exporting...';
+        btn.disabled = true;
+        
+        fetch('/api/export-playlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            platform: platform,
+            playlistId: playlistId
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            result.innerHTML = '<p class="text-[#38e07b] font-medium">✅ Successfully exported playlist to ' + platform + '!</p>';
+          } else {
+            result.innerHTML = '<p class="text-red-400 font-medium">❌ Error: ' + (data.error || 'Unknown error') + '</p>';
+          }
+        })
+        .catch(error => {
+          result.innerHTML = '<p class="text-red-400 font-medium">❌ Error: ' + error.message + '</p>';
+        })
+        .finally(() => {
+          btn.textContent = 'Export Playlist';
+          btn.disabled = false;
+        });
+      }
+      
       // Logout function
       function logout() {
         fetch('/api/logout', { method: 'POST' })
@@ -414,12 +708,17 @@
       window.convertLikedSongs = convertLikedSongs;
       window.mergePlaylists = mergePlaylists;
       window.removeArtistSongs = removeArtistSongs;
+      window.importPlaylist = importPlaylist;
+      window.exportPlaylist = exportPlaylist;
+      window.connectAppleMusic = connectAppleMusic;
+      window.connectAmazonMusic = connectAmazonMusic;
       window.logout = logout;
       
       // Initialize when page loads
       document.addEventListener('DOMContentLoaded', function() {
         console.log('Dashboard ready!');
         loadUserInfo();
+        checkPlatformStatus();
         
         // Check if a specific feature was requested
         const urlParams = new URLSearchParams(window.location.search);
