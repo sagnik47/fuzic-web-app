@@ -217,40 +217,16 @@ app.post('/api/convert-liked-to-playlist', refreshTokenIfNeeded, async (req, res
     }
     
     try {
-      // Create playlist with explicit options
-      const playlistOptions = {
+      // Correct async/await usage for createPlaylist
+      const playlistResponse = await spotifyApi.createPlaylist(userId, playlistName, {
         description: 'Playlist created from liked songs using Fuzic',
         public: false
-      };
-      
-      console.log('Creating playlist with options:', playlistOptions);
-      
-      // Use a promise-based approach to handle the API call
-      const playlistResponse = await new Promise((resolve, reject) => {
-        spotifyApi.createPlaylist(userId, playlistName, playlistOptions)
-          .then(response => {
-            console.log('Playlist creation successful:', response);
-            resolve(response);
-          })
-          .catch(error => {
-            console.error('Playlist creation failed:', error);
-            reject(error);
-          });
       });
       
       console.log('Raw playlist response:', playlistResponse);
-      console.log('Response type:', typeof playlistResponse);
-      console.log('Response keys:', playlistResponse ? Object.keys(playlistResponse) : 'undefined');
-      
-      if (!playlistResponse) {
-        throw new Error('Spotify API createPlaylist returned null/undefined');
+      if (!playlistResponse || !playlistResponse.body) {
+        throw new Error('Spotify API did not return a playlist object.');
       }
-      
-      if (!playlistResponse.body) {
-        console.log('Response without body:', playlistResponse);
-        throw new Error('Spotify API createPlaylist returned response without body. Full response: ' + JSON.stringify(playlistResponse));
-      }
-      
       const playlistId = playlistResponse.body.id;
       console.log('Playlist created successfully with ID:', playlistId);
       
