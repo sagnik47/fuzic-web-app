@@ -92,38 +92,12 @@
           <div class="layout-content-container flex flex-col max-w-[960px] flex-1">
             <h2 class="text-white tracking-light text-[28px] font-bold leading-tight px-4 text-center pb-3 pt-5">Your Music Dashboard</h2>
             
-            <!-- Feature Selection -->
-            <div class="flex justify-center mb-8">
-              <div class="flex flex-1 gap-3 max-w-[480px] flex-col items-stretch px-4 py-3">
-                <button
-                  class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#38e07b] text-[#111714] text-sm font-bold leading-normal tracking-[0.015em] w-full"
-                  onclick="showFeature('convert')"
-                  id="convert-btn"
-                >
-                  <span class="truncate">Convert Liked Songs to Playlist</span>
-                </button>
-                <button
-                  class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#29382f] text-white text-sm font-bold leading-normal tracking-[0.015em] w-full"
-                  onclick="showFeature('merge')"
-                  id="merge-btn"
-                >
-                  <span class="truncate">Merge Playlists</span>
-                </button>
-                <button
-                  class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#29382f] text-white text-sm font-bold leading-normal tracking-[0.015em] w-full"
-                  onclick="showFeature('remove')"
-                  id="remove-btn"
-                >
-                  <span class="truncate">Remove Artist's Songs</span>
-                </button>
-                <button
-                  class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#29382f] text-white text-sm font-bold leading-normal tracking-[0.015em] w-full"
-                  onclick="showFeature('cross-platform')"
-                  id="cross-platform-btn"
-                >
-                  <span class="truncate">Cross-Platform Playlists</span>
-                </button>
-              </div>
+            <!-- Dashboard Options: Change from vertical stack to 2x2 grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-xl mx-auto mb-10">
+              <button class="dashboard-btn" onclick="showFeature('convert')" id="convert-btn">Convert Liked Songs to Playlist</button>
+              <button class="dashboard-btn" onclick="showFeature('merge')" id="merge-btn">Merge Playlists</button>
+              <button class="dashboard-btn" onclick="showFeature('remove')" id="remove-btn">Remove Artist's Songs</button>
+              <button class="dashboard-btn" onclick="showFeature('cross-platform')" id="cross-platform-btn">Cross Platform Playlists</button>
             </div>
 
             <!-- Feature Content Areas -->
@@ -377,7 +351,7 @@
         features.forEach(f => f.classList.add('hidden'));
         
         // Reset button styles
-        const buttons = document.querySelectorAll('#convert-btn, #merge-btn, #remove-btn, #cross-platform-btn');
+        const buttons = document.querySelectorAll('.dashboard-btn');
         buttons.forEach(btn => {
           btn.className = btn.className.replace('bg-[#38e07b] text-[#111714]', 'bg-[#29382f] text-white');
         });
