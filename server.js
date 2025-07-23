@@ -55,7 +55,9 @@ const refreshTokenIfNeeded = async (req, res, next) => {
           httpOnly: true, 
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'lax',
-          maxAge: 2592000000 // 30 days
+          maxAge: 2592000000, // 30 days
+          path: '/',
+          // domain: '.yourdomain.com',
         });
         
         next();
@@ -140,13 +142,17 @@ app.get('/callback', async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 2592000000 // 30 days
+      maxAge: 2592000000, // 30 days
+      path: '/', // ensure cookie is sent for all routes
+      // domain: '.yourdomain.com', // uncomment and set if using a custom domain
     });
     res.cookie('refresh_token', refresh_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 2592000000 // 30 days
+      maxAge: 2592000000, // 30 days
+      path: '/',
+      // domain: '.yourdomain.com',
     });
 
     res.redirect('/dashboard');
