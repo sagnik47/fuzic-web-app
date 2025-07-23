@@ -95,7 +95,7 @@
             <!-- Revert dashboard feature buttons to original vertical stack -->
             <div class="flex justify-center mb-8">
               <div class="flex flex-1 gap-3 max-w-[480px] flex-col items-stretch px-4 py-3">
-                <button class="dashboard-btn" onclick="showFeature('convert')" id="convert-btn"><span class="truncate">Convert Liked Songs to Playlist</span></button>
+                <button class="dashboard-btn active" onclick="showFeature('convert')" id="convert-btn"><span class="truncate">Convert Liked Songs to Playlist</span></button>
                 <button class="dashboard-btn" onclick="showFeature('merge')" id="merge-btn"><span class="truncate">Merge Playlists</span></button>
                 <button class="dashboard-btn" onclick="showFeature('remove')" id="remove-btn"><span class="truncate">Remove Artist's Songs</span></button>
                 <button class="dashboard-btn" onclick="showFeature('cross-platform')" id="cross-platform-btn"><span class="truncate">Cross-Platform Playlists</span></button>
@@ -357,6 +357,7 @@
         const buttons = document.querySelectorAll('.dashboard-btn');
         buttons.forEach(btn => {
           btn.className = btn.className.replace('bg-[#38e07b] text-[#111714]', 'bg-[#29382f] text-white');
+          btn.classList.remove('active'); // Remove active class from all buttons
         });
         
         // Show selected feature
@@ -369,6 +370,7 @@
         const selectedBtn = document.getElementById(featureName + '-btn');
         if (selectedBtn) {
           selectedBtn.className = selectedBtn.className.replace('bg-[#29382f] text-white', 'bg-[#38e07b] text-[#111714]');
+          selectedBtn.classList.add('active'); // Add active class to the selected button
         }
         
         // Load data for specific features
