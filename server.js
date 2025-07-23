@@ -54,7 +54,8 @@ const refreshTokenIfNeeded = async (req, res, next) => {
         res.cookie('access_token', newAccessToken, { 
           httpOnly: true, 
           secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax'
+          sameSite: 'lax',
+          maxAge: 2592000000 // 30 days
         });
         
         next();
@@ -139,7 +140,7 @@ app.get('/callback', async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 3600000 // 1 hour
+      maxAge: 2592000000 // 30 days
     });
     res.cookie('refresh_token', refresh_token, {
       httpOnly: true,
