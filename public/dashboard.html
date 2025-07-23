@@ -92,12 +92,14 @@
           <div class="layout-content-container flex flex-col max-w-[960px] flex-1">
             <h2 class="text-white tracking-light text-[28px] font-bold leading-tight px-4 text-center pb-3 pt-5">Your Music Dashboard</h2>
             
-            <!-- Dashboard Options: Change from vertical stack to 2x2 grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-xl mx-auto mb-10">
-              <button class="dashboard-btn" onclick="showFeature('convert')" id="convert-btn">Convert Liked Songs to Playlist</button>
-              <button class="dashboard-btn" onclick="showFeature('merge')" id="merge-btn">Merge Playlists</button>
-              <button class="dashboard-btn" onclick="showFeature('remove')" id="remove-btn">Remove Artist's Songs</button>
-              <button class="dashboard-btn" onclick="showFeature('cross-platform')" id="cross-platform-btn">Cross Platform Playlists</button>
+            <!-- Revert dashboard feature buttons to original vertical stack -->
+            <div class="flex justify-center mb-8">
+              <div class="flex flex-1 gap-3 max-w-[480px] flex-col items-stretch px-4 py-3">
+                <button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#38e07b] text-[#111714] text-sm font-bold leading-normal tracking-[0.015em] w-full" onclick="showFeature('convert')" id="convert-btn"><span class="truncate">Convert Liked Songs to Playlist</span></button>
+                <button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#29382f] text-white text-sm font-bold leading-normal tracking-[0.015em] w-full" onclick="showFeature('merge')" id="merge-btn"><span class="truncate">Merge Playlists</span></button>
+                <button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#29382f] text-white text-sm font-bold leading-normal tracking-[0.015em] w-full" onclick="showFeature('remove')" id="remove-btn"><span class="truncate">Remove Artist's Songs</span></button>
+                <button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#29382f] text-white text-sm font-bold leading-normal tracking-[0.015em] w-full" onclick="showFeature('cross-platform')" id="cross-platform-btn"><span class="truncate">Cross-Platform Playlists</span></button>
+              </div>
             </div>
 
             <!-- Feature Content Areas -->
@@ -198,7 +200,8 @@
                   <!-- Platform Authentication Section -->
                   <div class="mb-6 p-4 bg-[#111714] rounded-lg">
                     <h4 class="text-[#38e07b] text-lg font-bold mb-3">Connect Music Platforms</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <!-- Connect Music Platforms in a 2x2 grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       <!-- Spotify Status -->
                       <div class="flex items-center justify-between p-3 bg-[#1DB954] bg-opacity-20 rounded-lg border border-[#1DB954]">
                         <div class="flex items-center">
@@ -217,6 +220,15 @@
                         <div class="text-gray-400 text-sm" id="apple-music-text">Not Connected</div>
                       </div>
                       
+                      <!-- YouTube Music Status -->
+                      <div class="flex items-center justify-between p-3 bg-[#FF0000] bg-opacity-20 rounded-lg border border-[#FF0000]" id="youtube-music-status">
+                        <div class="flex items-center">
+                          <img src="/images/youtube.png" alt="YouTube Music Logo" class="w-8 h-8 mr-3" />
+                          <span class="text-white font-medium">YouTube Music</span>
+                        </div>
+                        <div class="text-gray-400 text-sm" id="youtube-music-text">Not Connected</div>
+                      </div>
+                      
                       <!-- Amazon Music Status -->
                       <div class="flex items-center justify-between p-3 bg-[#FF9900] bg-opacity-20 rounded-lg border border-[#FF9900]" id="amazon-music-status">
                         <div class="flex items-center">
@@ -224,15 +236,6 @@
                           <span class="text-white font-medium">Amazon Music</span>
                         </div>
                         <div class="text-gray-400 text-sm" id="amazon-music-text">Not Connected</div>
-                      </div>
-                      
-                      <!-- Add YouTube Music Status -->
-                      <div class="flex items-center justify-between p-3 bg-[#FF0000] bg-opacity-20 rounded-lg border border-[#FF0000]" id="youtube-music-status">
-                        <div class="flex items-center">
-                          <img src="/images/youtube.png" alt="YouTube Music Logo" class="w-8 h-8 mr-3" />
-                          <span class="text-white font-medium">YouTube Music</span>
-                        </div>
-                        <div class="text-gray-400 text-sm" id="youtube-music-text">Not Connected</div>
                       </div>
                     </div>
                     
