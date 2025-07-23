@@ -4,6 +4,8 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const CrossPlatformService = require('./services/cross-platform');
 require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -291,25 +293,32 @@ app.post('/api/convert-liked-to-playlist', refreshTokenIfNeeded, async (req, res
 // Get user's playlists
 app.get('/api/playlists', refreshTokenIfNeeded, async (req, res) => {
   try {
+    const accessToken = spotifyApi.getAccessToken();
+    const me = await spotifyApi.getMe();
+    console.log('Spotify getMe:', me.body);
+    console.log('Access token:', accessToken);
     const data = await spotifyApi.getUserPlaylists({ limit: 50 });
+    console.log('Spotify playlists response:', data.body);
     res.json(data.body);
   } catch (error) {
     console.error('Error fetching playlists:', error);
-    let errorMessage = 'Failed to fetch playlists';
-    let status = 500;
-    if (error.statusCode === 401) {
-      errorMessage = 'Authentication expired. Please log in again.';
-      status = 401;
-    } else if (error.statusCode === 403) {
-      errorMessage = 'Permission denied. Please check app permissions.';
-      status = 403;
-    } else if (error.body && error.body.error && error.body.error.message) {
-      errorMessage = error.body.error.message;
-    } else if (error.message) {
-      errorMessage = error.message;
-    }
-    res.status(status).json({ success: false, error: errorMessage });
+    res.status(500).json({
+      error: 'Failed to fetch playlists',
+      details: error.body || error.message || error
+    });
   }
+});
+
+// Test endpoint to check if an image exists on the server
+app.get('/api/image-exists/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const imagePath = path.join(__dirname, 'public', 'images', filename);
+  fs.access(imagePath, fs.constants.F_OK, (err) => {
+    if (err) {
+      return res.status(404).json({ exists: false, message: 'Image not found on server', path: imagePath });
+    }
+    res.json({ exists: true, message: 'Image found on server', path: imagePath });
+  });
 });
 
 // Merge playlists
