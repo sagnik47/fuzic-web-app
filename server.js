@@ -283,7 +283,20 @@ app.get('/api/playlists', refreshTokenIfNeeded, async (req, res) => {
     res.json(data.body);
   } catch (error) {
     console.error('Error fetching playlists:', error);
-    res.status(500).json({ error: 'Failed to fetch playlists' });
+    let errorMessage = 'Failed to fetch playlists';
+    let status = 500;
+    if (error.statusCode === 401) {
+      errorMessage = 'Authentication expired. Please log in again.';
+      status = 401;
+    } else if (error.statusCode === 403) {
+      errorMessage = 'Permission denied. Please check app permissions.';
+      status = 403;
+    } else if (error.body && error.body.error && error.body.error.message) {
+      errorMessage = error.body.error.message;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    res.status(status).json({ success: false, error: errorMessage });
   }
 });
 

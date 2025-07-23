@@ -251,6 +251,15 @@
                         </div>
                         <div class="text-gray-400 text-sm" id="amazon-music-text">Not Connected</div>
                       </div>
+                      
+                      <!-- Add YouTube Music Status -->
+                      <div class="flex items-center justify-between p-3 bg-[#FF0000] bg-opacity-20 rounded-lg border border-[#FF0000]" id="youtube-music-status">
+                        <div class="flex items-center">
+                          <img src="/images/youtube.png" alt="YouTube Music Logo" class="w-8 h-8 mr-3" />
+                          <span class="text-white font-medium">YouTube Music</span>
+                        </div>
+                        <div class="text-gray-400 text-sm" id="youtube-music-text">Not Connected</div>
+                      </div>
                     </div>
                     
                     <div class="flex gap-3">
@@ -269,6 +278,15 @@
                       >
                         <img src="/images/amazon-music.png" alt="Amazon Music Logo" class="w-6 h-6 mr-2" />
                         Connect Amazon Music
+                      </button>
+                      
+                      <button
+                        class="btn-animated flex-1 bg-[#FF0000] text-white px-4 py-2 rounded-full font-bold hover:bg-[#D90000] transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-2"
+                        onclick="connectYouTubeMusic()"
+                        id="youtube-music-btn"
+                      >
+                        <img src="/images/youtube.png" alt="YouTube Music Logo" class="w-6 h-6 mr-2" />
+                        Connect YouTube Music
                       </button>
                     </div>
                   </div>
@@ -328,6 +346,7 @@
                       >
                         <option value="apple">Apple Music</option>
                         <option value="amazon">Amazon Music</option>
+                        <option value="youtube">YouTube Music</option>
                       </select>
                     </div>
                     <button
@@ -554,6 +573,10 @@
       function connectAmazonMusic() {
         window.location.href = '/amazon-music-login';
       }
+
+      function connectYouTubeMusic() {
+        window.location.href = '/youtube-music-login';
+      }
       
       // Check platform connection status
       function checkPlatformStatus() {
@@ -583,6 +606,20 @@
           amazonBtn.textContent = 'Connected';
           amazonBtn.disabled = true;
           amazonBtn.className = 'flex-1 bg-gray-600 text-gray-300 px-4 py-2 rounded-full font-bold cursor-not-allowed';
+        }
+
+        // Check YouTube Music connection
+        if (document.cookie.indexOf('youtube_music_token') !== -1) {
+          const youtubeStatus = document.getElementById('youtube-music-status');
+          const youtubeText = document.getElementById('youtube-music-text');
+          const youtubeBtn = document.getElementById('youtube-music-btn');
+
+          youtubeStatus.classList.add('connected');
+          youtubeText.textContent = '✓ Connected';
+          youtubeText.className = 'text-[#38e07b] text-sm';
+          youtubeBtn.textContent = 'Connected';
+          youtubeBtn.disabled = true;
+          youtubeBtn.className = 'flex-1 bg-gray-600 text-gray-300 px-4 py-2 rounded-full font-bold cursor-not-allowed';
         }
       }
       
@@ -704,6 +741,11 @@
         closeProfileDropdown();
         window.location.href = '/amazon-music-login';
       }
+
+      function connectYouTubeMusic() {
+        closeProfileDropdown();
+        window.location.href = '/youtube-music-login';
+      }
       
       // Logout function
       function logout() {
@@ -753,6 +795,11 @@
                         <div class="w-4 h-4 bg-[#FF9900] rounded-full flex items-center justify-center text-xs text-white">A</div>
                         Connect Amazon Music
                       </button>
+
+                      <button onclick="connectYouTubeMusic()" class="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#FF0000] hover:text-white transition-colors flex items-center gap-2">
+                        <div class="w-4 h-4 bg-[#FF0000] rounded-full flex items-center justify-center text-xs text-white">Y</div>
+                        Connect YouTube Music
+                      </button>
                       
                       <div class="border-t border-[#38e07b] mt-2 pt-2">
                         <button onclick="logout()" class="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900 hover:text-white transition-colors">
@@ -783,6 +830,7 @@
       window.closeProfileDropdown = closeProfileDropdown;
       window.connectAppleMusic = connectAppleMusic;
       window.connectAmazonMusic = connectAmazonMusic;
+      window.connectYouTubeMusic = connectYouTubeMusic;
       window.logout = logout;
       
       // Initialize when page loads

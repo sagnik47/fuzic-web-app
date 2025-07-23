@@ -48,11 +48,12 @@ async function loadPlaylists() {
       userPlaylists = data.items || [];
       populatePlaylistSelectors();
     } else {
-      throw new Error('Failed to load playlists');
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to load playlists');
     }
   } catch (error) {
     console.error('Error loading playlists:', error);
-    showError('Failed to load playlists. Please try again.');
+    showError(error.message || 'Failed to load playlists. Please try again.');
   }
 }
 
@@ -313,6 +314,32 @@ function hideLoading(button) {
 }
 
 function showError(message) {
-  // You could implement a toast notification here
-  alert(message);
+  // Remove any existing toast
+  const existingToast = document.getElementById('fuzic-toast');
+  if (existingToast) existingToast.remove();
+
+  // Create toast element
+  const toast = document.createElement('div');
+  toast.id = 'fuzic-toast';
+  toast.textContent = message;
+  toast.style.position = 'fixed';
+  toast.style.bottom = '30px';
+  toast.style.left = '50%';
+  toast.style.transform = 'translateX(-50%)';
+  toast.style.background = 'rgba(30,41,59,0.95)';
+  toast.style.color = '#fff';
+  toast.style.padding = '14px 28px';
+  toast.style.borderRadius = '8px';
+  toast.style.fontSize = '1rem';
+  toast.style.boxShadow = '0 2px 12px rgba(0,0,0,0.15)';
+  toast.style.zIndex = '9999';
+  toast.style.opacity = '1';
+  toast.style.transition = 'opacity 0.5s';
+
+  document.body.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 500);
+  }, 3500);
 }

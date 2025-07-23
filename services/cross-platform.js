@@ -5,6 +5,7 @@ class CrossPlatformService {
     this.spotifyApi = null;
     this.appleMusicApi = null;
     this.amazonMusicApi = null;
+    this.youtubeMusicApi = null;
   }
 
   // Initialize Spotify API
@@ -37,6 +38,14 @@ class CrossPlatformService {
     };
   }
 
+  // Initialize YouTube Music API
+  async initYouTubeMusic(accessToken) {
+    this.youtubeMusicApi = {
+      accessToken: accessToken,
+      baseURL: 'https://music.youtube.com/youtubei/v1'
+    };
+  }
+
   // Parse playlist URL to extract platform and playlist ID
   parsePlaylistUrl(url) {
     const urlObj = new URL(url);
@@ -59,6 +68,12 @@ class CrossPlatformService {
       return { platform: 'amazon', playlistId };
     }
     
+    // YouTube Music playlist URL
+    if (urlObj.hostname.includes('music.youtube.com') && urlObj.pathname.includes('/playlist')) {
+      const playlistId = urlObj.searchParams.get('list');
+      return { platform: 'youtube', playlistId };
+    }
+    
     throw new Error('Unsupported playlist URL format');
   }
 
@@ -72,6 +87,8 @@ class CrossPlatformService {
           return await this.getAppleMusicPlaylistTracks(playlistId);
         case 'amazon':
           return await this.getAmazonMusicPlaylistTracks(playlistId);
+        case 'youtube':
+          return await this.getYouTubeMusicPlaylistTracks(playlistId);
         default:
           throw new Error(`Unsupported platform: ${platform}`);
       }
@@ -149,6 +166,39 @@ class CrossPlatformService {
     } catch (error) {
       console.error('Amazon Music API error:', error);
       throw new Error('Failed to fetch Amazon Music playlist');
+    }
+  }
+
+  // Get YouTube Music playlist tracks
+  async getYouTubeMusicPlaylistTracks(playlistId) {
+    if (!this.youtubeMusicApi) {
+      throw new Error('YouTube Music API not initialized');
+    }
+    try {
+      // This is a placeholder. YouTube Music API is unofficial and may require additional headers and cookies.
+      const response = await axios.post(
+        `${this.youtubeMusicApi.baseURL}/browse`,
+        { browseId: `VL${playlistId}` },
+        {
+          headers: {
+            'Authorization': `Bearer ${this.youtubeMusicApi.accessToken}`,
+            'Content-Type': 'application/json',
+            'Origin': 'https://music.youtube.com',
+          }
+        }
+      );
+      // Parse response to extract tracks (pseudo-code, adjust as needed)
+      const tracks = (response.data.contents?.singleColumnBrowseResultsRenderer?.tabs[0]?.tabRenderer?.content?.sectionListRenderer?.contents[0]?.musicPlaylistShelfRenderer?.contents || []).map(item => ({
+        name: item.musicResponsiveListItemRenderer?.flexColumns[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs[0]?.text,
+        artist: item.musicResponsiveListItemRenderer?.flexColumns[1]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs[0]?.text,
+        album: '',
+        uri: item.musicResponsiveListItemRenderer?.playlistItemData?.videoId,
+        platform: 'youtube'
+      }));
+      return tracks;
+    } catch (error) {
+      console.error('YouTube Music API error:', error);
+      throw new Error('Failed to fetch YouTube Music playlist');
     }
   }
 
@@ -291,6 +341,50 @@ class CrossPlatformService {
       };
     } catch (error) {
       console.error('Error exporting to Amazon Music:', error);
+      throw error;
+    }
+  }
+
+  // Export playlist to YouTube Music
+  async exportToYouTubeMusic(playlistName, tracks) {
+    if (!this.youtubeMusicApi) {
+      throw new Error('YouTube Music API not initialized');
+    }
+    try {
+      // This is a placeholder. YouTube Music API is unofficial and may require additional headers and cookies.
+      // 1. Create playlist
+      const createResponse = await axios.post(
+        `${this.youtubeMusicApi.baseURL}/playlist/create`,
+        { title: playlistName, description: 'Playlist exported from Fuzic' },
+        {
+          headers: {
+            'Authorization': `Bearer ${this.youtubeMusicApi.accessToken}`,
+            'Content-Type': 'application/json',
+            'Origin': 'https://music.youtube.com',
+          }
+        }
+      );
+      const playlistId = createResponse.data.id;
+      // 2. Add tracks
+      const videoIds = tracks.map(track => track.uri);
+      await axios.post(
+        `${this.youtubeMusicApi.baseURL}/playlist/insert_item`,
+        { playlistId, videoIds },
+        {
+          headers: {
+            'Authorization': `Bearer ${this.youtubeMusicApi.accessToken}`,
+            'Content-Type': 'application/json',
+            'Origin': 'https://music.youtube.com',
+          }
+        }
+      );
+      return {
+        success: true,
+        playlist: createResponse.data,
+        tracksAdded: videoIds.length
+      };
+    } catch (error) {
+      console.error('Error exporting to YouTube Music:', error);
       throw error;
     }
   }
