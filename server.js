@@ -258,7 +258,6 @@ app.post('/api/convert-liked-to-playlist', refreshTokenIfNeeded, async (req, res
     console.error('Error message:', error.message);
     
     let errorMessage = 'Failed to convert liked songs to playlist';
-    
     if (error.statusCode === 401) {
       errorMessage = 'Authentication expired. Please log in again.';
     } else if (error.statusCode === 403) {
@@ -268,10 +267,16 @@ app.post('/api/convert-liked-to-playlist', refreshTokenIfNeeded, async (req, res
     } else if (error.message) {
       errorMessage = error.message;
     }
-    
-    res.status(error.statusCode || 500).json({ 
+    // Add more details for debugging
+    res.status(error.statusCode || 500).json({
       success: false,
-      error: errorMessage 
+      error: errorMessage,
+      details: {
+        statusCode: error.statusCode,
+        errorBody: error.body,
+        message: error.message,
+        note: 'If this is a playlist creation error, check your Spotify app permissions and required scopes.'
+      }
     });
   }
 });
