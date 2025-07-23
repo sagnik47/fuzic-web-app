@@ -252,3 +252,31 @@ body {
         font-size: 0.9rem;
     }
 }
+
+.dashboard-btn {
+  transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+  transform: scale(1);
+  background-color: #29382f;
+  color: #fff;
+  font-weight: 600;
+  border-radius: 9999px;
+  height: 2.5rem;
+  padding: 0 1.5rem;
+  margin-bottom: 0.5rem;
+  box-shadow: none;
+}
+.dashboard-btn:hover {
+  background-color: #38e07b;
+  color: #111714;
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(56,224,123,0.15);
+}
+.dashboard-btn:active {
+  transform: scale(0.97);
+}
+.dashboard-btn.active,
+.dashboard-btn.selected {
+  background-color: #38e07b;
+  color: #111714;
+  box-shadow: 0 4px 15px rgba(56,224,123,0.18);
+}

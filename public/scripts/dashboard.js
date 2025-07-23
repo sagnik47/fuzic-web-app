@@ -98,11 +98,9 @@ function showFeature(feature) {
     content.classList.add('hidden');
   });
   
-  // Reset all button styles
-  document.querySelectorAll('[id$="-btn"]').forEach(btn => {
-    if (btn.id.includes('convert') || btn.id.includes('merge') || btn.id.includes('remove')) {
-      btn.className = btn.className.replace('bg-[#38e07b] text-[#111714]', 'bg-[#29382f] text-white');
-    }
+  // Remove .active from all dashboard buttons
+  document.querySelectorAll('.dashboard-btn').forEach(btn => {
+    btn.classList.remove('active');
   });
   
   // Show selected feature and highlight button
@@ -114,7 +112,7 @@ function showFeature(feature) {
   }
   
   if (buttonElement) {
-    buttonElement.className = buttonElement.className.replace('bg-[#29382f] text-white', 'bg-[#38e07b] text-[#111714]');
+    buttonElement.classList.add('active');
   }
 }
 
