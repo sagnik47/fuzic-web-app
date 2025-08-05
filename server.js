@@ -259,7 +259,7 @@ app.post('/api/convert-liked-to-playlist', async (req, res) => {
     
     const playlistResponse = await spotifyApi.createPlaylist(me.body.id, {
       name: playlistName,
-      description: 'Converted from Liked Songs via Fuzic',
+      description: 'Converted from Liked Songs via Fuzic.vercel.app',
       public: true, // Make it a public playlist
     });
 
@@ -364,23 +364,36 @@ app.post('/api/merge-playlists', async (req, res) => {
     console.log('Starting merge playlists process...');
     
     // Step 1: Parse and validate request body
-    const { playlistIds, newPlaylistName } = req.body;
-    console.log('Request payload:', { playlistIds, newPlaylistName });
+    const { name, selectedPlaylists } = req.body;
+    console.log('Request payload:', { name, selectedPlaylists });
     
-    if (!newPlaylistName || newPlaylistName.trim() === '') {
-      console.error('Playlist name is empty or null');
+    // Validate playlist name
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+      console.error('Playlist name is missing, empty, or not a string');
       return res.status(400).json({
         success: false,
-        error: 'Playlist name is required'
+        error: 'Playlist name is required and must be a non-empty string'
       });
     }
     
-    if (!playlistIds || !Array.isArray(playlistIds) || playlistIds.length < 2) {
-      console.error('Invalid playlist IDs or insufficient playlists');
+    // Validate selected playlists
+    if (!selectedPlaylists || !Array.isArray(selectedPlaylists) || selectedPlaylists.length < 2) {
+      console.error('Invalid selectedPlaylists: missing, not array, or insufficient playlists');
       return res.status(400).json({
         success: false,
         error: 'Please select at least 2 playlists to merge'
       });
+    }
+    
+    // Validate each playlist ID
+    for (const playlistId of selectedPlaylists) {
+      if (!playlistId || typeof playlistId !== 'string') {
+        console.error('Invalid playlist ID:', playlistId);
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid playlist ID provided'
+        });
+      }
     }
     
     // Ensure access token is set
@@ -424,9 +437,9 @@ app.post('/api/merge-playlists', async (req, res) => {
     let allTracks = [];
     const seenTrackIds = new Set();
     
-    for (let i = 0; i < playlistIds.length; i++) {
-      const playlistId = playlistIds[i];
-      console.log(`Processing playlist ${i + 1}/${playlistIds.length}: ${playlistId}`);
+    for (let i = 0; i < selectedPlaylists.length; i++) {
+      const playlistId = selectedPlaylists[i];
+      console.log(`Processing playlist ${i + 1}/${selectedPlaylists.length}: ${playlistId}`);
       
       try {
         // Check if this is "Liked Songs" (special handling)
@@ -465,11 +478,11 @@ app.post('/api/merge-playlists', async (req, res) => {
           
           // Process all liked songs in order, removing duplicates
           const uniqueTracks = [];
-          const seenTrackIds = new Set();
+          const likedSongsSeenIds = new Set();
           
           for (const item of likedSongsBatch) {
-            if (item.track && !seenTrackIds.has(item.track.id)) {
-              seenTrackIds.add(item.track.id);
+            if (item.track && !likedSongsSeenIds.has(item.track.id)) {
+              likedSongsSeenIds.add(item.track.id);
               uniqueTracks.push(item.track.uri);
             }
           }
@@ -518,26 +531,46 @@ app.post('/api/merge-playlists', async (req, res) => {
     }
     
     // Step 4: Create new playlist
-    console.log('Creating new merged playlist:', newPlaylistName);
+    console.log('Creating new merged playlist:', name);
     
     let newPlaylistResponse;
     try {
-      newPlaylistResponse = await spotifyApi.createPlaylist(userId, newPlaylistName, {
+      newPlaylistResponse = await spotifyApi.createPlaylist(userId, name, {
         description: 'Merged playlist created using Fuzic',
         public: true // Make it public
       });
       
       if (!newPlaylistResponse || !newPlaylistResponse.body) {
         console.error('createPlaylist() failed: No playlist object returned');
+        console.error('Full Spotify response:', JSON.stringify(newPlaylistResponse));
         return res.status(500).json({
           success: false,
           error: 'Spotify API did not return a valid playlist object.'
         });
       }
       
-      console.log('Playlist created successfully with ID:', newPlaylistResponse.body.id);
+      // Validate playlist object has required fields
+      if (!newPlaylistResponse.body.id || !newPlaylistResponse.body.name || !newPlaylistResponse.body.uri) {
+        console.error('createPlaylist() failed: Missing required fields in response');
+        console.error('Playlist response:', JSON.stringify(newPlaylistResponse.body));
+        return res.status(500).json({
+          success: false,
+          error: 'Spotify API returned incomplete playlist object'
+        });
+      }
+      
+      console.log('Playlist created successfully:', {
+        id: newPlaylistResponse.body.id,
+        name: newPlaylistResponse.body.name,
+        uri: newPlaylistResponse.body.uri
+      });
     } catch (error) {
       console.error('createPlaylist() error:', error);
+      console.error('Error details:', {
+        statusCode: error.statusCode,
+        body: error.body,
+        message: error.message
+      });
       return res.status(500).json({
         success: false,
         error: 'Failed to create playlist'
@@ -578,7 +611,12 @@ app.post('/api/merge-playlists', async (req, res) => {
     console.log('Merge playlists process completed successfully');
     res.json({ 
       success: true, 
-      playlist: newPlaylistResponse.body,
+      playlist: {
+        id: newPlaylistResponse.body.id,
+        name: newPlaylistResponse.body.name,
+        uri: newPlaylistResponse.body.uri,
+        external_urls: newPlaylistResponse.body.external_urls
+      },
       tracksAdded: allTracks.length 
     });
     

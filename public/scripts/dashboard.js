@@ -190,8 +190,8 @@ async function mergePlaylists() {
     resultDiv.innerHTML = '<p class="text-yellow-400">Merging playlists...</p>';
     
     const payload = {
-      playlistIds: selectedPlaylists,
-      newPlaylistName: playlistName
+      name: playlistName,
+      selectedPlaylists: selectedPlaylists
     };
     console.log('Sending merge request with payload:', payload);
     
