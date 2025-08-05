@@ -23,7 +23,10 @@ function handleFeatureClick(feature) {
 // LOGOUT FUNCTION
 function logout() {
   alert('Logging out...');
-  fetch('/api/logout', { method: 'POST' })
+  fetch('/api/logout', { 
+    method: 'POST',
+    credentials: 'include'
+  })
     .then(function() { window.location.reload(); })
     .catch(function() { window.location.reload(); });
 }

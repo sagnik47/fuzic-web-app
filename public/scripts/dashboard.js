@@ -30,9 +30,15 @@ function checkAuthentication() {
 // Load user information
 async function loadUserInfo() {
   try {
-    // This would typically fetch user info from Spotify API
-    // For now, we'll just show a generic message
-    document.getElementById('user-info').textContent = 'Welcome!';
+    const response = await fetch('/api/me', {
+      credentials: 'include'
+    });
+    if (response.ok) {
+      const userData = await response.json();
+      document.getElementById('user-info').textContent = userData.display_name || 'User';
+    } else {
+      document.getElementById('user-info').textContent = 'User';
+    }
   } catch (error) {
     console.error('Error loading user info:', error);
     document.getElementById('user-info').textContent = 'User';
@@ -42,7 +48,9 @@ async function loadUserInfo() {
 // Load user's playlists
 async function loadPlaylists() {
   try {
-    const response = await fetch('/api/playlists');
+    const response = await fetch('/api/playlists', {
+      credentials: 'include'
+    });
     if (response.ok) {
       const data = await response.json();
       userPlaylists = data.items || [];
@@ -129,7 +137,8 @@ async function convertLikedSongs() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-      }
+      },
+      credentials: 'include'
     });
     
     const data = await response.json();
@@ -185,6 +194,7 @@ async function mergePlaylists() {
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
       body: JSON.stringify({
         playlistIds: selectedPlaylists,
         newPlaylistName: playlistName
@@ -244,6 +254,7 @@ async function removeArtistSongs() {
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
       body: JSON.stringify({
         playlistId: playlistId,
         artistName: artistName
@@ -286,13 +297,32 @@ async function removeArtistSongs() {
 // Logout function
 async function logout() {
   try {
-    await fetch('/api/logout', { method: 'POST' });
+    await fetch('/api/logout', { 
+      method: 'POST',
+      credentials: 'include'
+    });
   } catch (error) {
     console.error('Error logging out:', error);
   } finally {
     window.location.href = '/';
   }
 }
+
+// Toggle user dropdown
+function toggleUserDropdown() {
+  const dropdown = document.getElementById('user-dropdown');
+  dropdown.classList.toggle('hidden');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+  const dropdown = document.getElementById('user-dropdown');
+  const userSection = document.getElementById('user-profile-section');
+  
+  if (!userSection.contains(event.target)) {
+    dropdown.classList.add('hidden');
+  }
+});
 
 // Utility functions
 function showLoading(button) {

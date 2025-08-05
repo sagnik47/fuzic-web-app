@@ -233,7 +233,10 @@
       // LOGOUT FUNCTION
       function logout() {
         closeProfileDropdown();
-        fetch('/api/logout', { method: 'POST' })
+        fetch('/api/logout', { 
+        method: 'POST',
+        credentials: 'include'
+      })
           .then(function() { window.location.reload(); })
           .catch(function() { window.location.reload(); });
       }
@@ -244,7 +247,9 @@
           return; // Not authenticated
         }
         
-        fetch('/api/user')
+        fetch('/api/user', {
+        credentials: 'include'
+      })
           .then(function(response) {
             if (response.ok) {
               return response.json();
