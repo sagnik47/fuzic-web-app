@@ -249,34 +249,25 @@
                     
                     <div class="flex gap-3">
                       <button
-                        class="btn-animated flex-1 bg-[#FA243C] text-white px-4 py-2 rounded-full font-bold hover:bg-[#E01E35] transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-2"
+                        class="btn-animated flex-1 bg-[#FA243C] text-white px-4 py-2 rounded-full font-bold hover:bg-[#E01E35] transition-all duration-200 transform hover:scale-105"
                         onclick="connectAppleMusic()"
                         id="apple-music-btn"
                       >
-                        <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center mr-2">
-                          <img src="/images/apple-music.png" alt="Apple Music Logo" class="w-5 h-5" />
-                        </div>
                         Connect Apple Music
                       </button>
                       <button
-                        class="btn-animated flex-1 bg-[#FF9900] text-white px-4 py-2 rounded-full font-bold hover:bg-[#E68A00] transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-2"
+                        class="btn-animated flex-1 bg-[#FF9900] text-white px-4 py-2 rounded-full font-bold hover:bg-[#E68A00] transition-all duration-200 transform hover:scale-105"
                         onclick="connectAmazonMusic()"
                         id="amazon-music-btn"
                       >
-                        <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center mr-2">
-                          <img src="/images/amazon-music.png" alt="Amazon Music Logo" class="w-5 h-5" />
-                        </div>
                         Connect Amazon Music
                       </button>
                       
                       <button
-                        class="btn-animated flex-1 bg-[#FF0000] text-white px-4 py-2 rounded-full font-bold hover:bg-[#D90000] transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-2"
+                        class="btn-animated flex-1 bg-[#FF0000] text-white px-4 py-2 rounded-full font-bold hover:bg-[#D90000] transition-all duration-200 transform hover:scale-105"
                         onclick="connectYouTubeMusic()"
                         id="youtube-music-btn"
                       >
-                        <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center mr-2">
-                          <img src="/images/youtube.png" alt="YouTube Music Logo" class="w-5 h-5" />
-                        </div>
                         Connect YouTube Music
                       </button>
                     </div>
@@ -603,12 +594,7 @@
           appleStatus.classList.add('connected');
           appleText.textContent = '✓ Connected';
           appleText.className = 'text-[#38e07b] text-sm font-medium';
-          appleBtn.innerHTML = `
-            <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center mr-2">
-              <img src="/images/apple-music.png" alt="Apple Music Logo" class="w-5 h-5" />
-            </div>
-            Connected
-          `;
+          appleBtn.textContent = 'Connected';
           appleBtn.disabled = true;
           appleBtn.className = 'flex-1 bg-gray-600 text-gray-300 px-4 py-2 rounded-full font-bold cursor-not-allowed';
         }
@@ -622,12 +608,7 @@
           amazonStatus.classList.add('connected');
           amazonText.textContent = '✓ Connected';
           amazonText.className = 'text-[#38e07b] text-sm font-medium';
-          amazonBtn.innerHTML = `
-            <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center mr-2">
-              <img src="/images/amazon-music.png" alt="Amazon Music Logo" class="w-5 h-5" />
-            </div>
-            Connected
-          `;
+          amazonBtn.textContent = 'Connected';
           amazonBtn.disabled = true;
           amazonBtn.className = 'flex-1 bg-gray-600 text-gray-300 px-4 py-2 rounded-full font-bold cursor-not-allowed';
         }
@@ -641,12 +622,7 @@
           youtubeStatus.classList.add('connected');
           youtubeText.textContent = '✓ Connected';
           youtubeText.className = 'text-[#38e07b] text-sm font-medium';
-          youtubeBtn.innerHTML = `
-            <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center mr-2">
-              <img src="/images/youtube.png" alt="YouTube Music Logo" class="w-5 h-5" />
-            </div>
-            Connected
-          `;
+          youtubeBtn.textContent = 'Connected';
           youtubeBtn.disabled = true;
           youtubeBtn.className = 'flex-1 bg-gray-600 text-gray-300 px-4 py-2 rounded-full font-bold cursor-not-allowed';
         }
