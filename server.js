@@ -396,6 +396,18 @@ app.post('/api/merge-playlists', async (req, res) => {
     
     // Validate selected playlists
     if (!selectedPlaylists || !Array.isArray(selectedPlaylists) || selectedPlaylists.length < 2) {
+      console.error('Invalid selected playlists:', selectedPlaylists);
+      return res.status(400).json({
+        success: false,
+        error: 'Please provide a name and at least 2 playlists to merge.'
+      });
+    }
+    
+    console.log('Playlist name:', playlistName);
+    console.log('Selected playlists:', selectedPlaylists);
+    
+    // Validate selected playlists
+    if (!selectedPlaylists || !Array.isArray(selectedPlaylists) || selectedPlaylists.length < 2) {
       console.error('Invalid selectedPlaylists: missing, not array, or insufficient playlists');
       return res.status(400).json({
         success: false,
@@ -450,6 +462,15 @@ app.post('/api/merge-playlists', async (req, res) => {
     
     const userId = userInfo.body.id;
     console.log('User ID:', userId);
+    
+    // Validate user ID
+    if (!userId) {
+      console.error('No user ID returned from Spotify');
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to get user ID from Spotify'
+      });
+    }
     
     // Step 3: Get tracks from all playlists with proper error handling
     let allTracks = [];
@@ -552,29 +573,12 @@ app.post('/api/merge-playlists', async (req, res) => {
     console.log('Creating new merged playlist:', playlistName);
     console.log('User ID:', userId);
     
-    // Validate inputs before API call
-    if (!playlistName || typeof playlistName !== 'string' || playlistName.trim() === '') {
-      console.error('Invalid playlist name:', playlistName);
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid request. Please provide a valid playlist name.'
-      });
-    }
-    
-    if (!selectedPlaylists || !Array.isArray(selectedPlaylists) || selectedPlaylists.length < 2) {
-      console.error('Invalid selected playlists:', selectedPlaylists);
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid request. Please provide at least 2 playlists.'
-      });
-    }
-    
     let newPlaylistResponse;
     try {
       // Create playlist with proper options object
       const playlistOptions = {
         name: playlistName,
-        description: 'Merged playlist created using Fuzic',
+        description: 'Merged playlist via Fuzic',
         public: true
       };
       
@@ -582,7 +586,7 @@ app.post('/api/merge-playlists', async (req, res) => {
       
       newPlaylistResponse = await spotifyApi.createPlaylist(userId, playlistName, playlistOptions);
       
-      console.log('Created playlist object:', JSON.stringify(newPlaylistResponse, null, 2));
+      console.log('Created Playlist Response:', JSON.stringify(newPlaylistResponse, null, 2));
       
       // Validate the response structure
       if (!newPlaylistResponse) {
@@ -645,7 +649,24 @@ app.post('/api/merge-playlists', async (req, res) => {
     // Step 5: Add tracks to new playlist in batches of 100
     if (allTracks.length > 0) {
       try {
+        console.log(`Tracks to add:`, allTracks);
         console.log(`Adding ${allTracks.length} tracks to new playlist...`);
+        
+        // Validate track URIs
+        if (!Array.isArray(allTracks) || allTracks.length === 0) {
+          console.error('No valid tracks to add');
+          return res.status(400).json({
+            success: false,
+            error: 'No valid tracks found to add to playlist'
+          });
+        }
+        
+        // Check if all tracks are valid Spotify URIs
+        const validTracks = allTracks.filter(track => track && track.startsWith('spotify:track:'));
+        if (validTracks.length !== allTracks.length) {
+          console.error('Some tracks are not valid Spotify URIs');
+          console.error('Invalid tracks:', allTracks.filter(track => !track || !track.startsWith('spotify:track:')));
+        }
         
         for (let i = 0; i < allTracks.length; i += 100) {
           const batch = allTracks.slice(i, i + 100);
@@ -669,6 +690,8 @@ app.post('/api/merge-playlists', async (req, res) => {
           error: 'Failed to add tracks to playlist'
         });
       }
+    } else {
+      console.log('No tracks to add to playlist');
     }
     
     console.log('Merge playlists process completed successfully');
