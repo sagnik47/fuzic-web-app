@@ -461,12 +461,16 @@
       
       // Merge playlists
       function mergePlaylists() {
-        const playlistName = document.getElementById('merge-playlist-name').value;
-        const selectedPlaylists = Array.from(document.querySelectorAll('#playlist-list input:checked')).map(cb => cb.value);
+        const playlistName = document.getElementById('merge-playlist-name').value.trim();
+        const selectedPlaylists = Array.from(document.querySelectorAll('#playlist-list input[type="checkbox"]:checked')).map(cb => cb.value);
         const result = document.getElementById('merge-result');
         const btn = document.getElementById('merge-action-btn');
         
-        if (!playlistName.trim()) {
+        console.log('HTML mergePlaylists called');
+        console.log('Playlist name:', playlistName);
+        console.log('Selected playlists:', selectedPlaylists);
+        
+        if (!playlistName) {
           result.innerHTML = '<p class="text-red-400 font-medium">❌ Please enter a playlist name</p>';
           return;
         }
@@ -479,21 +483,25 @@
         btn.textContent = 'Merging...';
         btn.disabled = true;
         
+        const payload = {
+          name: playlistName,
+          selectedPlaylists: selectedPlaylists
+        };
+        
+        console.log('Sending payload:', payload);
+        
         fetch('/api/merge-playlists', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({
-            playlistIds: selectedPlaylists,
-            newPlaylistName: playlistName
-          })
+          body: JSON.stringify(payload)
         })
         .then(response => response.json())
         .then(data => {
           if (data.success) {
             result.innerHTML = '<p class="text-[#38e07b] font-medium">✅ Successfully merged into "' + data.playlist.name + '" with ' + data.tracksAdded + ' tracks!</p>';
             document.getElementById('merge-playlist-name').value = '';
-            document.querySelectorAll('#playlist-list input:checked').forEach(cb => cb.checked = false);
+            document.querySelectorAll('#playlist-list input[type="checkbox"]:checked').forEach(cb => cb.checked = false);
           } else {
             result.innerHTML = '<p class="text-red-400 font-medium">❌ Error: ' + (data.error || 'Unknown error') + '</p>';
           }
