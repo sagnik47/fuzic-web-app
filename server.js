@@ -236,14 +236,23 @@ app.post('/api/convert-liked-to-playlist', async (req, res) => {
       });
     }
 
-    // Step 2: Create Playlist using the correct method (no userId needed)
+    // Step 2: Get user info and create public playlist
+    const me = await spotifyApi.getMe();
+    if (!me || !me.body) {
+      console.error('getMe() failed: No user info returned');
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to get user information from Spotify'
+      });
+    }
+    
     const playlistName = `Liked Songs - ${new Date().toLocaleDateString()}`;
     console.log('Creating playlist:', playlistName);
     
-    const playlistResponse = await spotifyApi.createPlaylist({
+    const playlistResponse = await spotifyApi.createPlaylist(me.body.id, {
       name: playlistName,
-      description: 'Playlist created from liked songs using Fuzic',
-      public: false,
+      description: 'Converted from Liked Songs via Fuzic',
+      public: true, // Make it a public playlist
     });
 
     if (!playlistResponse || !playlistResponse.body) {
