@@ -189,16 +189,19 @@ async function mergePlaylists() {
     showLoading(button);
     resultDiv.innerHTML = '<p class="text-yellow-400">Merging playlists...</p>';
     
+    const payload = {
+      playlistIds: selectedPlaylists,
+      newPlaylistName: playlistName
+    };
+    console.log('Sending merge request with payload:', payload);
+    
     const response = await fetch('/api/merge-playlists', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({
-        playlistIds: selectedPlaylists,
-        newPlaylistName: playlistName
-      })
+      body: JSON.stringify(payload)
     });
     
     const data = await response.json();
