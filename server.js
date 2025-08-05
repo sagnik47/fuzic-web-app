@@ -548,39 +548,84 @@ app.post('/api/merge-playlists', async (req, res) => {
       });
     }
     
-    // Step 4: Create new playlist
+    // Step 4: Create new playlist with proper validation
     console.log('Creating new merged playlist:', playlistName);
+    console.log('User ID:', userId);
+    
+    // Validate inputs before API call
+    if (!playlistName || typeof playlistName !== 'string' || playlistName.trim() === '') {
+      console.error('Invalid playlist name:', playlistName);
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid request. Please provide a valid playlist name.'
+      });
+    }
+    
+    if (!selectedPlaylists || !Array.isArray(selectedPlaylists) || selectedPlaylists.length < 2) {
+      console.error('Invalid selected playlists:', selectedPlaylists);
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid request. Please provide at least 2 playlists.'
+      });
+    }
     
     let newPlaylistResponse;
     try {
-      newPlaylistResponse = await spotifyApi.createPlaylist(userId, playlistName, {
+      // Create playlist with proper options object
+      const playlistOptions = {
+        name: playlistName,
         description: 'Merged playlist created using Fuzic',
-        public: true // Make it public
-      });
+        public: true
+      };
       
-      if (!newPlaylistResponse || !newPlaylistResponse.body) {
-        console.error('createPlaylist() failed: No playlist object returned');
-        console.error('Full Spotify response:', JSON.stringify(newPlaylistResponse));
+      console.log('Creating playlist with options:', playlistOptions);
+      
+      newPlaylistResponse = await spotifyApi.createPlaylist(userId, playlistName, playlistOptions);
+      
+      console.log('Created playlist object:', JSON.stringify(newPlaylistResponse, null, 2));
+      
+      // Validate the response structure
+      if (!newPlaylistResponse) {
+        console.error('createPlaylist() failed: No response returned');
         return res.status(500).json({
           success: false,
           error: 'Spotify API did not return a valid playlist object.'
         });
       }
       
-      // Validate playlist object has required fields
-      if (!newPlaylistResponse.body.id || !newPlaylistResponse.body.name || !newPlaylistResponse.body.uri) {
-        console.error('createPlaylist() failed: Missing required fields in response');
-        console.error('Playlist response:', JSON.stringify(newPlaylistResponse.body));
+      if (!newPlaylistResponse.body) {
+        console.error('createPlaylist() failed: No body in response');
+        console.error('Full response:', JSON.stringify(newPlaylistResponse));
         return res.status(500).json({
           success: false,
-          error: 'Spotify API returned incomplete playlist object'
+          error: 'Spotify API did not return a valid playlist object.'
+        });
+      }
+      
+      // Validate required fields
+      if (!newPlaylistResponse.body.id) {
+        console.error('createPlaylist() failed: Missing playlist ID');
+        console.error('Response body:', JSON.stringify(newPlaylistResponse.body));
+        return res.status(500).json({
+          success: false,
+          error: 'Spotify API did not return a valid playlist object.'
+        });
+      }
+      
+      if (!newPlaylistResponse.body.name) {
+        console.error('createPlaylist() failed: Missing playlist name');
+        console.error('Response body:', JSON.stringify(newPlaylistResponse.body));
+        return res.status(500).json({
+          success: false,
+          error: 'Spotify API did not return a valid playlist object.'
         });
       }
       
       console.log('Playlist created successfully:', {
         id: newPlaylistResponse.body.id,
         name: newPlaylistResponse.body.name,
-        uri: newPlaylistResponse.body.uri
+        uri: newPlaylistResponse.body.uri,
+        external_urls: newPlaylistResponse.body.external_urls
       });
     } catch (error) {
       console.error('createPlaylist() error:', error);
