@@ -185,36 +185,87 @@ app.get('/api/liked-songs', refreshTokenIfNeeded, async (req, res) => {
 // Convert liked songs to playlist
 app.post('/api/convert-liked-to-playlist', refreshTokenIfNeeded, async (req, res) => {
   try {
-    // Get user info
-    const userInfo = await spotifyApi.getMe();
-    if (!userInfo || !userInfo.body) {
-      throw new Error('Failed to get user information from Spotify');
-    }
-    const userId = userInfo.body.id;
+    console.log('Starting convert-liked-to-playlist process...');
     
-    // Get liked songs with proper pagination
+    // Ensure access token is set
+    const accessToken = req.cookies.access_token;
+    if (!accessToken) {
+      console.error('No access token found in cookies');
+      return res.status(401).json({
+        success: false,
+        error: 'No access token available. Please log in again.'
+      });
+    }
+    
+    spotifyApi.setAccessToken(accessToken);
+    console.log('Access token set successfully');
+    
+    // Get user info with proper error handling
+    let userInfo;
+    try {
+      console.log('Fetching user information...');
+      userInfo = await spotifyApi.getMe();
+      if (!userInfo || !userInfo.body) {
+        console.error('getMe() failed: No user info returned');
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to get user information from Spotify'
+        });
+      }
+      console.log('Creating playlist for user:', userInfo.body.display_name);
+    } catch (error) {
+      console.error('getMe() error:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to get user information from Spotify'
+      });
+    }
+    
+    const userId = userInfo.body.id;
+    console.log('User ID:', userId);
+    
+    // Get liked songs with proper pagination and error handling
     let allLikedSongs = [];
     let offset = 0;
     const limit = 50;
     let hasMore = true;
     
-    while (hasMore) {
-      const likedSongs = await spotifyApi.getMySavedTracks({ limit, offset });
-      if (!likedSongs || !likedSongs.body) {
-        throw new Error('Failed to get liked songs from Spotify');
+    try {
+      console.log('Starting to fetch liked songs...');
+      while (hasMore) {
+        console.log(`Fetching liked songs (offset: ${offset}, limit: ${limit})`);
+        const likedSongs = await spotifyApi.getMySavedTracks({ limit, offset });
+        
+        if (!likedSongs || !likedSongs.body) {
+          console.error('getMySavedTracks() failed: No response body');
+          return res.status(500).json({
+            success: false,
+            error: 'Failed to get liked songs from Spotify'
+          });
+        }
+        
+        allLikedSongs = allLikedSongs.concat(likedSongs.body.items);
+        console.log(`Fetched ${likedSongs.body.items.length} songs (total so far: ${allLikedSongs.length})`);
+        
+        // Check if we've reached the end
+        if (likedSongs.body.items.length < limit) {
+          hasMore = false;
+        } else {
+          offset += limit;
+        }
       }
-      
-      allLikedSongs = allLikedSongs.concat(likedSongs.body.items);
-      
-      // Check if we've reached the end
-      if (likedSongs.body.items.length < limit) {
-        hasMore = false;
-      } else {
-        offset += limit;
-      }
+    } catch (error) {
+      console.error('getMySavedTracks() error:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to get liked songs from Spotify'
+      });
     }
     
+    console.log(`Total liked songs found: ${allLikedSongs.length}`);
+    
     if (allLikedSongs.length === 0) {
+      console.log('No liked songs found');
       return res.json({ 
         success: false, 
         error: 'No liked songs found. Please like some songs first!' 
@@ -222,45 +273,79 @@ app.post('/api/convert-liked-to-playlist', refreshTokenIfNeeded, async (req, res
     }
     
     const trackUris = allLikedSongs.map(item => item.track.uri);
+    console.log(`Prepared ${trackUris.length} track URIs for playlist`);
     
-    // Create playlist
+    // Create playlist with proper error handling
     const playlistName = `Liked Songs - ${new Date().toLocaleDateString()}`;
+    console.log('Creating playlist:', playlistName);
     
-    // Verify access token is set
-    const currentAccessToken = spotifyApi.getAccessToken();
-    if (!currentAccessToken) {
-      throw new Error('No access token available for playlist creation');
-    }
-    
+    let playlistResponse;
     try {
-      // Create playlist
-      const playlistResponse = await spotifyApi.createPlaylist(userId, playlistName, {
+      playlistResponse = await spotifyApi.createPlaylist(userId, playlistName, {
         description: 'Playlist created from liked songs using Fuzic',
         public: false
       });
       
       if (!playlistResponse || !playlistResponse.body) {
-        throw new Error('Spotify API did not return a playlist object.');
-      }
-      const playlistId = playlistResponse.body.id;
-      
-      // Add tracks to playlist
-      if (trackUris.length > 0) {
-        const addTracksResponse = await spotifyApi.addTracksToPlaylist(playlistId, trackUris);
-        if (!addTracksResponse || !addTracksResponse.body) {
-          throw new Error('Failed to add tracks to playlist');
-        }
+        console.error('createPlaylist() failed: No playlist object returned');
+        return res.status(500).json({
+          success: false,
+          error: 'Spotify API did not return a valid playlist object.'
+        });
       }
       
-      res.json({ 
-        success: true, 
-        playlist: playlistResponse.body,
-        tracksAdded: trackUris.length 
+      console.log('Playlist created successfully with ID:', playlistResponse.body.id);
+    } catch (error) {
+      console.error('createPlaylist() error:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to create playlist'
       });
-    } catch (playlistError) {
-      throw playlistError;
     }
+    
+    const playlistId = playlistResponse.body.id;
+    
+    // Add tracks to playlist with batching (max 100 per request)
+    if (trackUris.length > 0) {
+      try {
+        console.log(`Adding ${trackUris.length} tracks to playlist...`);
+        
+        // Split tracks into batches of 100 (Spotify API limit)
+        const batchSize = 100;
+        for (let i = 0; i < trackUris.length; i += batchSize) {
+          const batch = trackUris.slice(i, i + batchSize);
+          console.log(`Adding batch ${Math.floor(i/batchSize) + 1} (${batch.length} tracks)`);
+          
+          const addTracksResponse = await spotifyApi.addTracksToPlaylist(playlistId, batch);
+          if (!addTracksResponse || !addTracksResponse.body) {
+            console.error('addTracksToPlaylist() failed: No response body');
+            return res.status(500).json({
+              success: false,
+              error: 'Failed to add tracks to playlist'
+            });
+          }
+        }
+        
+        console.log('All tracks added successfully');
+      } catch (error) {
+        console.error('addTracksToPlaylist() error:', error);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to add tracks to playlist'
+        });
+      }
+    }
+    
+    console.log('Convert-liked-to-playlist process completed successfully');
+    res.json({ 
+      success: true, 
+      playlist: playlistResponse.body,
+      tracksAdded: trackUris.length 
+    });
+    
   } catch (error) {
+    console.error('Unexpected error in convert-liked-to-playlist:', error);
+    
     let errorMessage = 'Failed to convert liked songs to playlist';
     
     if (error.statusCode === 401) {
