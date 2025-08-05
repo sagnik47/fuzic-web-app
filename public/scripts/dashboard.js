@@ -169,11 +169,18 @@ async function convertLikedSongs() {
 async function mergePlaylists() {
   const button = document.getElementById('merge-action-btn');
   const resultDiv = document.getElementById('merge-result');
-  const playlistName = document.getElementById('merge-playlist-name').value.trim();
+  const playlistNameInput = document.getElementById('merge-playlist-name');
+  const playlistName = playlistNameInput ? playlistNameInput.value.trim() : '';
+  
+  console.log('Playlist name input element:', playlistNameInput);
+  console.log('Playlist name value:', playlistName);
+  console.log('Playlist name length:', playlistName.length);
   
   // Get selected playlists
   const selectedPlaylists = Array.from(document.querySelectorAll('#playlist-list input[type="checkbox"]:checked'))
     .map(checkbox => checkbox.value);
+  
+  console.log('Selected playlists:', selectedPlaylists);
   
   if (!playlistName) {
     resultDiv.innerHTML = '<p class="text-red-400">❌ Please enter a playlist name</p>';

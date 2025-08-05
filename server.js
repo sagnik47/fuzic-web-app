@@ -364,17 +364,35 @@ app.post('/api/merge-playlists', async (req, res) => {
     console.log('Starting merge playlists process...');
     
     // Step 1: Parse and validate request body
-    const { name, selectedPlaylists } = req.body;
-    console.log('Request payload:', { name, selectedPlaylists });
+    console.log('Raw request body:', req.body);
+    console.log('Request headers:', req.headers);
     
-    // Validate playlist name
-    if (!name || typeof name !== 'string' || name.trim() === '') {
+    const { name, selectedPlaylists } = req.body;
+    console.log('Parsed payload:', { name, selectedPlaylists });
+    console.log('Name type:', typeof name);
+    console.log('Name length:', name ? name.length : 'undefined');
+    
+    // Validate playlist name with fallback checks
+    let playlistName = name;
+    
+    // Check if name is in a different field (fallback)
+    if (!playlistName && req.body.newPlaylistName) {
+      playlistName = req.body.newPlaylistName;
+      console.log('Using fallback newPlaylistName:', playlistName);
+    }
+    
+    if (!playlistName || typeof playlistName !== 'string' || playlistName.trim() === '') {
       console.error('Playlist name is missing, empty, or not a string');
+      console.error('Available fields in req.body:', Object.keys(req.body));
       return res.status(400).json({
         success: false,
         error: 'Playlist name is required and must be a non-empty string'
       });
     }
+    
+    // Trim the name
+    playlistName = playlistName.trim();
+    console.log('Final playlist name:', playlistName);
     
     // Validate selected playlists
     if (!selectedPlaylists || !Array.isArray(selectedPlaylists) || selectedPlaylists.length < 2) {
@@ -531,11 +549,11 @@ app.post('/api/merge-playlists', async (req, res) => {
     }
     
     // Step 4: Create new playlist
-    console.log('Creating new merged playlist:', name);
+    console.log('Creating new merged playlist:', playlistName);
     
     let newPlaylistResponse;
     try {
-      newPlaylistResponse = await spotifyApi.createPlaylist(userId, name, {
+      newPlaylistResponse = await spotifyApi.createPlaylist(userId, playlistName, {
         description: 'Merged playlist created using Fuzic',
         public: true // Make it public
       });
