@@ -792,25 +792,21 @@
                   
                   <!-- Profile Dropdown -->
                   <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-[#29382f] rounded-lg shadow-lg border border-[#38e07b] z-50">
-                    <div class="py-2">
+                    <div class="py-2 flex flex-col space-y-2">
                       <div class="px-4 py-2 text-sm text-gray-300 border-b border-[#38e07b]">
                         <div class="font-medium">${user.display_name}</div>
                         <div class="text-xs">Spotify Connected</div>
                       </div>
-                      
                       <button onclick="connectAppleMusic()" class="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#FA243C] hover:text-white transition-colors">
                         Connect Apple Music
                       </button>
-                      
                       <button onclick="connectAmazonMusic()" class="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#FF9900] hover:text-white transition-colors">
                         Connect Amazon Music
                       </button>
-
                       <button onclick="connectYouTubeMusic()" class="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#FF0000] hover:text-white transition-colors">
                         Connect YouTube Music
                       </button>
-                      
-                      <div class="border-t border-[#38e07b] mt-2 pt-2">
+                      <div class="border-t border-[#38e07b] pt-2">
                         <button onclick="logout()" class="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900 hover:text-white transition-colors">
                           Logout
                         </button>
