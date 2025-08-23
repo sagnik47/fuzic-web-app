@@ -81,6 +81,7 @@
           <div class="flex flex-1 justify-end gap-8">
             <div class="flex items-center gap-9">
               <button class="text-white text-sm font-medium leading-normal hover:text-[#38e07b] transition-colors" onclick="goHome()">Home</button>
+              <button class="text-white text-sm font-medium leading-normal hover:text-[#38e07b] transition-colors" onclick="goTransfer()">Transfer Playlists</button>
               <div id="user-profile-section" class="relative">
                 <button class="text-[#38e07b] text-sm font-medium leading-normal hover:text-white transition-colors flex items-center gap-2" onclick="toggleUserDropdown()">
                   <span id="user-info">Loading...</span>
@@ -460,13 +461,15 @@
       }
       
       // Merge playlists
+// Use external mergePlaylists function from dashboard.js
       function mergePlaylists() {
+        // Get references to UI elements
         const playlistName = document.getElementById('merge-playlist-name').value.trim();
         const selectedPlaylists = Array.from(document.querySelectorAll('#playlist-list input[type="checkbox"]:checked')).map(cb => cb.value);
         const result = document.getElementById('merge-result');
         const btn = document.getElementById('merge-action-btn');
         
-        console.log('HTML mergePlaylists called');
+        console.log('mergePlaylists called');
         console.log('Playlist name:', playlistName);
         console.log('Selected playlists:', selectedPlaylists);
         
@@ -728,6 +731,11 @@
       // Go home function
       function goHome() {
         window.location.href = '/';
+      }
+      
+      // Go to transfer page function
+      function goTransfer() {
+        window.location.href = '/transfer';
       }
       
       // Toggle profile dropdown

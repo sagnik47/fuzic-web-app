@@ -184,8 +184,12 @@
           // Not logged in, redirect to login
           window.location.href = '/login';
         } else {
-          // Logged in, go to dashboard with feature
-          window.location.href = '/dashboard?feature=' + feature;
+          // Logged in, redirect based on feature
+          if (feature === 'cross-platform') {
+            window.location.href = '/transfer';
+          } else {
+            window.location.href = '/dashboard?feature=' + feature;
+          }
         }
       }
       

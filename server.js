@@ -169,6 +169,11 @@ app.get('/dashboard', (req, res) => {
   res.sendFile(__dirname + '/public/dashboard.html');
 });
 
+// Transfer playlists route
+app.get('/transfer', (req, res) => {
+  res.sendFile(__dirname + '/public/transfer.html');
+});
+
 // API Routes
 
 // Get user's liked songs
