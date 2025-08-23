@@ -116,7 +116,7 @@
                   class="btn-animated flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#29382f] text-white text-sm font-bold leading-normal tracking-[0.015em] w-full hover:shadow-lg transform transition-all duration-200"
                   onclick="handleFeatureClick('cross-platform')"
                 >
-                  <span class="truncate">Cross-Platform Playlists</span>
+                  <span class="truncate">Transfer Playlists</span>
                 </button>
               </div>
             </div>
@@ -149,7 +149,7 @@
               </div>
               
               <div class="bg-[#29382f] p-6 rounded-lg text-center">
-                <h3 class="text-[#38e07b] text-lg font-bold mb-3">🌐 Cross-Platform</h3>
+                <h3 class="text-[#38e07b] text-lg font-bold mb-3">🌐 Transfer Playlists</h3>
                 <p class="text-white text-sm">Transfer playlists between Spotify, Apple Music, and Amazon Music seamlessly.</p>
               </div>
             </div>
@@ -246,6 +246,11 @@
         window.location.href = '/amazon-music-login';
       }
       
+      function connectYouTubeMusic() {
+        closeProfileDropdown();
+        window.location.href = '/youtube-music-login';
+      }
+      
       // LOGOUT FUNCTION
       function logout() {
         closeProfileDropdown();
@@ -308,14 +313,16 @@
                     <div class="text-xs">Spotify Connected</div>
                   </div>
                   
-                  <button onclick="connectAppleMusic()" class="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#FA243C] hover:text-white transition-colors flex items-center gap-2">
-                    <img src="/images/apple-music.png" alt="Apple Music Logo" class="w-4 h-4 mr-2" />
+                  <button onclick="connectAppleMusic()" class="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#FA243C] hover:text-white transition-colors">
                     Connect Apple Music
                   </button>
                   
-                  <button onclick="connectAmazonMusic()" class="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#FF9900] hover:text-white transition-colors flex items-center gap-2">
-                    <img src="/images/amazon-music.png" alt="Amazon Music Logo" class="w-4 h-4 mr-2" />
+                  <button onclick="connectAmazonMusic()" class="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#FF9900] hover:text-white transition-colors">
                     Connect Amazon Music
+                  </button>
+                  
+                  <button onclick="connectYouTubeMusic()" class="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#FF0000] hover:text-white transition-colors">
+                    Connect YouTube Music
                   </button>
                   
                   <div class="border-t border-[#38e07b] mt-2 pt-2">
@@ -340,6 +347,7 @@
       window.closeProfileDropdown = closeProfileDropdown;
       window.connectAppleMusic = connectAppleMusic;
       window.connectAmazonMusic = connectAmazonMusic;
+      window.connectYouTubeMusic = connectYouTubeMusic;
       window.logout = logout;
       
       console.log('JavaScript functions loaded!');

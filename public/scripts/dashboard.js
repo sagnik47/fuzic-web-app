@@ -3,21 +3,13 @@
 let userPlaylists = [];
 let currentFeature = 'convert';
 
-// Initialize dashboard when page loads
-document.addEventListener('DOMContentLoaded', function() {
-  checkAuthentication();
+// Dashboard functions - will be called from dashboard.html
+
+// Initialize dashboard functions
+function initializeDashboard() {
   loadUserInfo();
   loadPlaylists();
-  
-  // Check URL for specific feature
-  const urlParams = new URLSearchParams(window.location.search);
-  const feature = urlParams.get('feature');
-  if (feature) {
-    showFeature(feature);
-  } else {
-    showFeature('convert');
-  }
-});
+}
 
 // Check if user is authenticated
 function checkAuthentication() {
@@ -36,6 +28,32 @@ async function loadUserInfo() {
     if (response.ok) {
       const userData = await response.json();
       document.getElementById('user-info').textContent = userData.display_name || 'User';
+      
+      // Also update the user profile section if it exists
+      const userProfileSection = document.getElementById('user-profile-section');
+      if (userProfileSection && userData.display_name) {
+        const profileHTML = `
+          <div class="relative">
+            <button
+              onclick="toggleUserDropdown()"
+              class="text-[#38e07b] text-sm font-medium leading-normal hover:text-white transition-colors flex items-center gap-2"
+            >
+              <span>${userData.display_name}</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+            <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-[#1a1a1a] rounded-lg shadow-lg border border-[#29382f] z-50">
+              <div class="py-2">
+                <button class="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#29382f] transition-colors" onclick="logout()">
+                  Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+        userProfileSection.innerHTML = profileHTML;
+      }
     } else {
       document.getElementById('user-info').textContent = 'User';
     }
@@ -381,3 +399,12 @@ function showError(message) {
     setTimeout(() => toast.remove(), 500);
   }, 3500);
 }
+
+// Make functions global
+window.showFeature = showFeature;
+window.convertLikedSongs = convertLikedSongs;
+window.mergePlaylists = mergePlaylists;
+window.removeArtistSongs = removeArtistSongs;
+window.initializeDashboard = initializeDashboard;
+window.toggleUserDropdown = toggleUserDropdown;
+window.logout = logout;
