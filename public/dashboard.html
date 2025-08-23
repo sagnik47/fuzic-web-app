@@ -763,6 +763,43 @@
           }
         });
       });
+      // Load user info into profile dropdown
+async function loadUserInfo() {
+  try {
+    const res = await fetch('/api/user', { credentials: 'include' });
+    const user = await res.json();
+
+    if (user && user.name) {
+      // Replace Loading... with username
+      document.getElementById('user-info').textContent = user.name;
+
+      // Build dropdown dynamically
+      const dropdown = document.getElementById('user-dropdown');
+      dropdown.innerHTML = `
+        <div class="py-2">
+          <div class="px-4 py-2 text-sm text-gray-300">${user.name}</div>
+          <div class="px-4 py-2 text-xs text-gray-500">${user.platform || 'Spotify'} Connected</div>
+          <button class="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#29382f]" onclick="connectAppleMusic()">Connect Apple Music</button>
+          <button class="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#29382f]" onclick="connectAmazonMusic()">Connect Amazon Music</button>
+          <button class="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#29382f]" onclick="connectYouTubeMusic()">Connect YouTube Music</button>
+          <button class="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-[#29382f]" onclick="logout()">Logout</button>
+        </div>
+      `;
+    } else {
+      document.getElementById('user-info').textContent = 'Guest';
+    }
+  } catch (err) {
+    console.error('Error loading user info:', err);
+    document.getElementById('user-info').textContent = 'Guest';
+  }
+}
+
+// Run on page load
+window.addEventListener('DOMContentLoaded', () => {
+  loadUserInfo();
+  checkPlatformStatus();
+});
+
     </script>
   </body>
 </html>
