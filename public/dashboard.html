@@ -80,21 +80,29 @@
           </div>
           <div class="flex flex-1 justify-end gap-8">
           <div class="flex items-center gap-9">
-              <div id="user-profile-section" class="relative">
-                <button class="text-[#38e07b] text-sm font-medium leading-normal hover:text-white transition-colors flex items-center gap-2" onclick="toggleUserDropdown()">
-                  <span id="user-info">Loading...</span>
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                  </svg>
-                </button>
-                <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-[#1a1a1a] rounded-lg shadow-lg border border-[#29382f] z-50">
-                  <div class="py-2">
-                    <button class="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#29382f] transition-colors" onclick="logout()">
-                      Logout
-                    </button>
+              <!-- Login/Profile Dropdown -->
+                <div id="loginDropdown" class="relative inline-block text-left">
+                  <button id="loginButton" onclick="toggleDropdown()" 
+                          class="flex items-center px-4 py-2 rounded-lg bg-[#29382f] text-white hover:bg-[#38e07b]">
+                    <img id="profilePic" src="/default-avatar.png" alt="Profile" 
+                        class="w-8 h-8 rounded-full mr-2 border border-gray-500">
+                    <span id="username">Guest</span>
+                    <svg class="w-4 h-4 ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" 
+                        viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            d="M19 9l-7 7-7-7"/>
+                    </svg>
+                  </button>
+
+                  <!-- Dropdown Menu -->
+                  <div id="dropdownMenu" 
+                      class="hidden absolute right-0 mt-2 w-48 bg-[#1a1a1a] rounded-lg shadow-lg border border-[#29382f] z-50">
+                    <a href="/dashboard" class="block px-4 py-2 text-sm text-white hover:bg-[#29382f]">Dashboard</a>
+                    <a href="/settings" class="block px-4 py-2 text-sm text-white hover:bg-[#29382f]">Settings</a>
+                    <button onclick="logout()" 
+                            class="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-[#29382f]">Logout</button>
                   </div>
                 </div>
-              </div>
             </div>
           </div>
         </header>
@@ -763,42 +771,31 @@
           }
         });
       });
-      // Load user info into profile dropdown
-async function loadUserInfo() {
-  try {
-    const res = await fetch('/api/user', { credentials: 'include' });
-    const user = await res.json();
+        function toggleDropdown() {
+         document.getElementById("dropdownMenu").classList.toggle("hidden");
+        }
 
-    if (user && user.name) {
-      // Replace Loading... with username
-      document.getElementById('user-info').textContent = user.name;
+        // Close dropdown when clicking outside
+        window.addEventListener("click", function(e) {
+          const dropdown = document.getElementById("loginDropdown");
+          if (dropdown && !dropdown.contains(e.target)) {
+            document.getElementById("dropdownMenu").classList.add("hidden");
+          }
+        });
 
-      // Build dropdown dynamically
-      const dropdown = document.getElementById('user-dropdown');
-      dropdown.innerHTML = `
-        <div class="py-2">
-          <div class="px-4 py-2 text-sm text-gray-300">${user.name}</div>
-          <div class="px-4 py-2 text-xs text-gray-500">${user.platform || 'Spotify'} Connected</div>
-          <button class="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#29382f]" onclick="connectAppleMusic()">Connect Apple Music</button>
-          <button class="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#29382f]" onclick="connectAmazonMusic()">Connect Amazon Music</button>
-          <button class="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#29382f]" onclick="connectYouTubeMusic()">Connect YouTube Music</button>
-          <button class="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-[#29382f]" onclick="logout()">Logout</button>
-        </div>
-      `;
-    } else {
-      document.getElementById('user-info').textContent = 'Guest';
-    }
-  } catch (err) {
-    console.error('Error loading user info:', err);
-    document.getElementById('user-info').textContent = 'Guest';
-  }
-}
+        // Auto-check login via cookie
+        document.addEventListener("DOMContentLoaded", function() {
+          const usernameEl = document.getElementById("username");
+          const profilePic = document.getElementById("profilePic");
 
-// Run on page load
-window.addEventListener('DOMContentLoaded', () => {
-  loadUserInfo();
-  checkPlatformStatus();
-});
+          if (document.cookie.indexOf("access_token") !== -1) {
+            usernameEl.textContent = "Sagnik"; // replace with real user info later
+            profilePic.src = "https://i.pravatar.cc/150?img=3"; // replace with Spotify pic
+          } else {
+            usernameEl.textContent = "Guest";
+            profilePic.src = "/default-avatar.png";
+          }
+        });
 
     </script>
   </body>
