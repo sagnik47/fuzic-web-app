@@ -197,12 +197,25 @@
         window.location.href = '/';
       }
       
-      // SHOW ABOUT SECTION
+      // TOGGLE ABOUT SECTION
       function showAbout() {
         const aboutSection = document.getElementById('about');
-        if (aboutSection) {
-          aboutSection.classList.remove('hidden');
-          aboutSection.scrollIntoView({ behavior: 'smooth' });
+        const mainContent = document.querySelector('.px-40.flex.flex-1.justify-center.py-5');
+        const aboutButton = document.querySelector('button[onclick="showAbout()"]');
+        
+        if (aboutSection && mainContent && aboutButton) {
+          if (aboutSection.classList.contains('hidden')) {
+            // Show about section
+            aboutSection.classList.remove('hidden');
+            mainContent.style.display = 'none';
+            aboutButton.textContent = 'Back';
+            aboutSection.scrollIntoView({ behavior: 'smooth' });
+          } else {
+            // Hide about section and show main content
+            aboutSection.classList.add('hidden');
+            mainContent.style.display = 'flex';
+            aboutButton.textContent = 'About';
+          }
         }
       }
       

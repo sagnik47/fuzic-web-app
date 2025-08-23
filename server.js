@@ -590,7 +590,6 @@ app.post('/api/merge-playlists', async (req, res) => {
     try {
       // Create playlist with proper options object
       const playlistOptions = {
-        name: playlistName,
         description: 'Merged playlist via Fuzic',
         public: true
       };
