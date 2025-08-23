@@ -73,7 +73,6 @@
           </div>
           <div class="flex flex-1 justify-end gap-8">
             <div class="flex items-center gap-9">
-              <button class="text-white text-sm font-medium leading-normal hover:text-[#38e07b] transition-colors" onclick="goHome()">Home</button>
               <button class="text-white text-sm font-medium leading-normal hover:text-[#38e07b] transition-colors" onclick="showAbout()">About</button>
             </div>
             <div id="auth-section">
@@ -133,7 +132,7 @@
               <p class="text-white text-base max-w-2xl mx-auto">fuzic is a powerful cross-platform music management tool that helps you organize your music library across Spotify, Apple Music, and Amazon Music. Where different playlists, songs, and musical experiences come together seamlessly.</p>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
               <div class="bg-[#29382f] p-6 rounded-lg text-center">
                 <h3 class="text-[#38e07b] text-lg font-bold mb-3">🎯 Convert Liked Songs</h3>
                 <p class="text-white text-sm">Transform your liked songs into organized playlists with just one click.</p>
@@ -179,8 +178,8 @@
       
       // FEATURE BUTTON FUNCTION  
       function handleFeatureClick(feature) {
-        // Check if user is logged in
-        if (document.cookie.indexOf('access_token') === -1) {
+        // Check if user is logged in using fuzic_auth cookie
+        if (document.cookie.indexOf('fuzic_auth=true') === -1) {
           // Not logged in, redirect to login
           window.location.href = '/login';
         } else {
@@ -247,7 +246,7 @@
       
       // LOAD USER PROFILE IF AUTHENTICATED
       function loadUserProfile() {
-        if (document.cookie.indexOf('access_token') === -1) {
+        if (document.cookie.indexOf('fuzic_auth=true') === -1) {
           return; // Not authenticated
         }
         

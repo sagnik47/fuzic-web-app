@@ -156,6 +156,14 @@ app.get('/callback', async (req, res) => {
       path: '/',
       // domain: '.yourdomain.com',
     });
+    // Add a client-accessible cookie for authentication status checks
+    res.cookie('fuzic_auth', 'true', {
+      httpOnly: false, // This allows client-side access
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 2592000000, // 30 days
+      path: '/',
+    });
 
     res.redirect('/dashboard');
   } catch (error) {
@@ -1037,6 +1045,7 @@ app.get('/amazon-music-callback', async (req, res) => {
 app.post('/api/logout', (req, res) => {
   res.clearCookie('access_token');
   res.clearCookie('refresh_token');
+  res.clearCookie('fuzic_auth');
   res.json({ success: true });
 });
 

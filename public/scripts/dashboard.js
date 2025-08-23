@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Check if user is authenticated
 function checkAuthentication() {
-  if (!document.cookie.includes('access_token')) {
+  if (!document.cookie.includes('fuzic_auth=true')) {
     window.location.href = '/login';
     return;
   }
