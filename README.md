@@ -9,7 +9,7 @@ A powerful web application that helps you manage your music library across multi
 * **Merge Playlists**: Combine multiple playlists while automatically removing duplicates  
 * **Remove Artist's Songs**: Remove all songs by specific artists from any playlist  
 
-### Cross-Platform Features (NEW!)
+### Cross-Platform Features (work in progress)
 * **Multi-Platform Authentication**: Connect to Spotify, Apple Music, and Amazon Music  
 * **Import Playlists**: Import playlists from Apple Music or Amazon Music to Spotify  
 * **Export Playlists**: Export your Spotify playlists to Apple Music or Amazon Music  
