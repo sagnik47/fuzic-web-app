@@ -65,54 +65,116 @@ async function loadUserInfo() {
 
 // Load user's playlists
 async function loadPlaylists() {
+  console.log('Loading playlists...');
   try {
     const response = await fetch('/api/playlists', {
       credentials: 'include'
     });
+    
+    console.log('Playlists API response status:', response.status);
+    console.log('Playlists API response headers:', response.headers);
+    
     if (response.ok) {
       const data = await response.json();
+      console.log('Playlists API response data:', data);
       userPlaylists = data.items || [];
+      console.log('User playlists loaded:', userPlaylists.length, 'playlists');
       populatePlaylistSelectors();
     } else {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to load playlists');
+      const errorText = await response.text();
+      console.error('Playlists API error response:', errorText);
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch (parseError) {
+        console.error('Failed to parse error response as JSON:', parseError);
+        throw new Error(`HTTP ${response.status}: ${errorText || 'Failed to load playlists'}`);
+      }
+      throw new Error(errorData.error || `HTTP ${response.status}: Failed to load playlists`);
     }
   } catch (error) {
     console.error('Error loading playlists:', error);
+    
+    // Show detailed error in UI
+    const playlistList = document.getElementById('playlist-list');
+    if (playlistList) {
+      playlistList.innerHTML = `
+        <div class="text-red-400 p-3 bg-red-900 bg-opacity-20 rounded border border-red-500">
+          <p class="font-bold">❌ Failed to load playlists</p>
+          <p class="text-sm mt-1">Error: ${error.message}</p>
+          <button onclick="loadPlaylists()" class="mt-2 px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700">
+            Retry
+          </button>
+        </div>
+      `;
+    }
+    
     showError(error.message || 'Failed to load playlists. Please try again.');
   }
 }
 
 // Populate playlist selectors
 function populatePlaylistSelectors() {
+  console.log('Populating playlist selectors with', userPlaylists.length, 'playlists');
+  
   // Populate merge playlists checkboxes
   const playlistList = document.getElementById('playlist-list');
+  if (!playlistList) {
+    console.error('playlist-list element not found');
+    return;
+  }
+  
   playlistList.innerHTML = '';
   
   if (userPlaylists.length === 0) {
-    playlistList.innerHTML = '<p class="text-white">No playlists found.</p>';
+    playlistList.innerHTML = `
+      <div class="text-gray-400 p-3 bg-gray-800 bg-opacity-20 rounded border border-gray-600">
+        <p>No playlists found.</p>
+        <button onclick="loadPlaylists()" class="mt-2 px-3 py-1 bg-[#38e07b] text-[#111714] rounded text-xs hover:bg-[#32d470]">
+          Refresh
+        </button>
+      </div>
+    `;
   } else {
-    userPlaylists.forEach(playlist => {
+    userPlaylists.forEach((playlist, index) => {
       const checkbox = document.createElement('label');
-      checkbox.className = 'flex items-center space-x-2 text-white cursor-pointer';
+      checkbox.className = 'flex items-center p-2 bg-[#111714] rounded cursor-pointer hover:bg-[#1a1a1a] transition-colors';
       checkbox.innerHTML = `
-        <input type="checkbox" value="${playlist.id}" class="form-checkbox text-[#38e07b] bg-[#111714] border-[#38e07b]">
-        <span>${playlist.name} (${playlist.tracks.total} tracks)</span>
+        <input type="checkbox" value="${playlist.id}" class="mr-3 text-[#38e07b] bg-[#111714] border-[#38e07b] rounded focus:ring-[#38e07b]">
+        <span class="text-white">${playlist.name} (${playlist.tracks.total} tracks)</span>
       `;
       playlistList.appendChild(checkbox);
+      console.log(`Added checkbox ${index + 1}: ${playlist.name} (${playlist.id})`);
     });
   }
   
   // Populate remove artist playlist selector
   const removeSelect = document.getElementById('remove-playlist-select');
-  removeSelect.innerHTML = '<option value="">Select a playlist...</option>';
+  if (removeSelect) {
+    removeSelect.innerHTML = '<option value="">Select a playlist...</option>';
+    
+    userPlaylists.forEach(playlist => {
+      const option = document.createElement('option');
+      option.value = playlist.id;
+      option.textContent = `${playlist.name} (${playlist.tracks.total} tracks)`;
+      removeSelect.appendChild(option);
+    });
+    console.log('Populated remove playlist selector with', userPlaylists.length, 'options');
+  }
   
-  userPlaylists.forEach(playlist => {
-    const option = document.createElement('option');
-    option.value = playlist.id;
-    option.textContent = `${playlist.name} (${playlist.tracks.total} tracks)`;
-    removeSelect.appendChild(option);
-  });
+  // Populate export playlist selector
+  const exportSelect = document.getElementById('export-playlist-select');
+  if (exportSelect) {
+    exportSelect.innerHTML = '<option value="">Select a playlist...</option>';
+    
+    userPlaylists.forEach(playlist => {
+      const option = document.createElement('option');
+      option.value = playlist.id;
+      option.textContent = `${playlist.name} (${playlist.tracks.total} tracks)`;
+      exportSelect.appendChild(option);
+    });
+    console.log('Populated export playlist selector with', userPlaylists.length, 'options');
+  }
 }
 
 // Show specific feature
@@ -190,29 +252,38 @@ async function mergePlaylists() {
   const playlistNameInput = document.getElementById('merge-playlist-name');
   const playlistName = playlistNameInput ? playlistNameInput.value.trim() : '';
   
+  console.log('=== MERGE PLAYLISTS DEBUG ===');
   console.log('Playlist name input element:', playlistNameInput);
   console.log('Playlist name value:', playlistName);
   console.log('Playlist name length:', playlistName.length);
   
   // Get selected playlists
-  const selectedPlaylists = Array.from(document.querySelectorAll('#playlist-list input[type="checkbox"]:checked'))
+  const checkboxes = document.querySelectorAll('#playlist-list input[type="checkbox"]');
+  console.log('Found checkboxes:', checkboxes.length);
+  
+  const selectedPlaylists = Array.from(checkboxes)
+    .filter(checkbox => checkbox.checked)
     .map(checkbox => checkbox.value);
   
   console.log('Selected playlists:', selectedPlaylists);
+  console.log('User playlists available:', userPlaylists.length);
   
+  // Validation with detailed error messages
   if (!playlistName) {
-    resultDiv.innerHTML = '<p class="text-red-400">❌ Please enter a playlist name</p>';
+    const errorMsg = '<div class="text-red-400 p-3 bg-red-900 bg-opacity-20 rounded border border-red-500"><p class="font-bold">❌ Validation Error</p><p class="text-sm">Please enter a playlist name</p></div>';
+    resultDiv.innerHTML = errorMsg;
     return;
   }
   
   if (selectedPlaylists.length < 2) {
-    resultDiv.innerHTML = '<p class="text-red-400">❌ Please select at least 2 playlists to merge</p>';
+    const errorMsg = `<div class="text-red-400 p-3 bg-red-900 bg-opacity-20 rounded border border-red-500"><p class="font-bold">❌ Validation Error</p><p class="text-sm">Please select at least 2 playlists to merge (currently selected: ${selectedPlaylists.length})</p></div>`;
+    resultDiv.innerHTML = errorMsg;
     return;
   }
   
   try {
     showLoading(button);
-    resultDiv.innerHTML = '<p class="text-yellow-400">Merging playlists...</p>';
+    resultDiv.innerHTML = '<div class="text-yellow-400 p-3 bg-yellow-900 bg-opacity-20 rounded border border-yellow-500"><p>🔄 Merging playlists...</p></div>';
     
     const payload = {
       name: playlistName,
@@ -229,15 +300,27 @@ async function mergePlaylists() {
       body: JSON.stringify(payload)
     });
     
-    const data = await response.json();
+    console.log('Merge API response status:', response.status);
+    console.log('Merge API response headers:', response.headers);
+    
+    let data;
+    const responseText = await response.text();
+    console.log('Merge API raw response:', responseText);
+    
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('Failed to parse merge response as JSON:', parseError);
+      throw new Error(`Invalid response from server: ${responseText}`);
+    }
     
     if (response.ok) {
       resultDiv.innerHTML = `
-        <div class="text-green-400">
+        <div class="text-green-400 p-3 bg-green-900 bg-opacity-20 rounded border border-green-500">
           <p class="font-bold">✅ Success!</p>
           <p>Created merged playlist: "${data.playlist.name}"</p>
           <p>Added ${data.tracksAdded} unique tracks</p>
-          <a href="${data.playlist.external_urls.spotify}" target="_blank" class="text-[#38e07b] underline">View on Spotify</a>
+          <a href="${data.playlist.external_urls.spotify}" target="_blank" class="text-[#38e07b] underline hover:text-[#32d470]">View on Spotify</a>
         </div>
       `;
       // Clear form
@@ -246,11 +329,19 @@ async function mergePlaylists() {
       // Reload playlists to include the new one
       setTimeout(loadPlaylists, 1000);
     } else {
-      throw new Error(data.error || 'Failed to merge playlists');
+      throw new Error(data.error || `HTTP ${response.status}: ${responseText}`);
     }
   } catch (error) {
     console.error('Error merging playlists:', error);
-    resultDiv.innerHTML = `<p class="text-red-400">❌ Error: ${error.message}</p>`;
+    resultDiv.innerHTML = `
+      <div class="text-red-400 p-3 bg-red-900 bg-opacity-20 rounded border border-red-500">
+        <p class="font-bold">❌ Merge Failed</p>
+        <p class="text-sm mt-1">Error: ${error.message}</p>
+        <button onclick="loadPlaylists()" class="mt-2 px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700">
+          Reload Playlists
+        </button>
+      </div>
+    `;
   } finally {
     hideLoading(button);
   }
@@ -401,6 +492,13 @@ function showError(message) {
 
 }
 
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('Dashboard DOM loaded, initializing...');
+  checkAuthentication();
+  initializeDashboard();
+});
+
 // Make functions global
 window.showFeature = showFeature;
 window.convertLikedSongs = convertLikedSongs;
@@ -409,3 +507,4 @@ window.removeArtistSongs = removeArtistSongs;
 window.initializeDashboard = initializeDashboard;
 window.toggleUserDropdown = toggleUserDropdown;
 window.logout = logout;
+window.loadPlaylists = loadPlaylists;
