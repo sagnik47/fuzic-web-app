@@ -79,30 +79,16 @@
             </div>
           </div>
           <div class="flex flex-1 justify-end gap-8">
-          <div class="flex items-center gap-9">
-              <!-- Login/Profile Dropdown -->
-                <div id="loginDropdown" class="relative inline-block text-left">
-                  <button id="loginButton" onclick="toggleDropdown()" 
-                          class="flex items-center px-4 py-2 rounded-lg bg-[#29382f] text-white hover:bg-[#38e07b]">
-                    <img id="profilePic" src="/default-avatar.png" alt="Profile" 
-                        class="w-8 h-8 rounded-full mr-2 border border-gray-500">
-                    <span id="username">Guest</span>
-                    <svg class="w-4 h-4 ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" 
-                        viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                            d="M19 9l-7 7-7-7"/>
-                    </svg>
-                  </button>
-
-                  <!-- Dropdown Menu -->
-                  <div id="dropdownMenu" 
-                      class="hidden absolute right-0 mt-2 w-48 bg-[#1a1a1a] rounded-lg shadow-lg border border-[#29382f] z-50">
-                    <a href="/dashboard" class="block px-4 py-2 text-sm text-white hover:bg-[#29382f]">Dashboard</a>
-                    <a href="/settings" class="block px-4 py-2 text-sm text-white hover:bg-[#29382f]">Settings</a>
-                    <button onclick="logout()" 
-                            class="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-[#29382f]">Logout</button>
-                  </div>
+            <div class="flex items-center gap-9">
+              <!-- User Profile Section - Using same structure as transfer page -->
+              <div id="user-profile-section" class="relative">
+                <!-- This will be populated by loadUserInfo function -->
+                <!-- Default guest state -->
+                <div class="flex items-center px-4 py-2 rounded-lg bg-[#29382f] text-white">
+                  <img src="/default-avatar.png" alt="Profile" class="w-8 h-8 rounded-full mr-2 border border-gray-500">
+                  <span>Guest</span>
                 </div>
+              </div>
             </div>
           </div>
         </header>
@@ -407,11 +393,11 @@
             if (data.success) {
               result.innerHTML = '<p class="text-[#38e07b] font-medium">✅ Successfully created playlist "' + data.playlist.name + '" with ' + data.tracksAdded + ' tracks!</p>';
             } else {
-              result.innerHTML = '<p class="text-red-400 font-medium">❌ Error: ' + (data.error || 'Unknown error') + '</p>';
+              result.innerHTML = '<p class="text-red-400 font-medium">⛔ Error: ' + (data.error || 'Unknown error') + '</p>';
             }
           })
           .catch(error => {
-            result.innerHTML = '<p class="text-red-400 font-medium">❌ Error: ' + error.message + '</p>';
+            result.innerHTML = '<p class="text-red-400 font-medium">⛔ Error: ' + error.message + '</p>';
           })
           .finally(() => {
             btn.textContent = 'Create Playlist';
@@ -467,8 +453,6 @@
         }
       }
       
-      // Merge playlists function is now loaded from dashboard.js
-      
       // Remove artist songs
       function removeArtistSongs() {
         const playlistId = document.getElementById('remove-playlist-select').value;
@@ -477,12 +461,12 @@
         const btn = document.getElementById('remove-action-btn');
         
         if (!playlistId) {
-          result.innerHTML = '<p class="text-red-400 font-medium">❌ Please select a playlist</p>';
+          result.innerHTML = '<p class="text-red-400 font-medium">⛔ Please select a playlist</p>';
           return;
         }
         
         if (!artistName.trim()) {
-          result.innerHTML = '<p class="text-red-400 font-medium">❌ Please enter an artist name</p>';
+          result.innerHTML = '<p class="text-red-400 font-medium">⛔ Please enter an artist name</p>';
           return;
         }
         
@@ -504,11 +488,11 @@
             result.innerHTML = '<p class="text-[#38e07b] font-medium">✅ Successfully removed ' + data.tracksRemoved + ' tracks by "' + artistName + '"</p>';
             document.getElementById('artist-name').value = '';
           } else {
-            result.innerHTML = '<p class="text-red-400 font-medium">❌ Error: ' + (data.error || 'Unknown error') + '</p>';
+            result.innerHTML = '<p class="text-red-400 font-medium">⛔ Error: ' + (data.error || 'Unknown error') + '</p>';
           }
         })
         .catch(error => {
-          result.innerHTML = '<p class="text-red-400 font-medium">❌ Error: ' + error.message + '</p>';
+          result.innerHTML = '<p class="text-red-400 font-medium">⛔ Error: ' + error.message + '</p>';
         })
         .finally(() => {
           btn.textContent = 'Remove Songs';
@@ -516,35 +500,6 @@
         });
       }
       
-      // Platform authentication functions
-      function connectAppleMusic() {
-        window.location.href = '/apple-music-login';
-      }
-      
-      function connectAmazonMusic() {
-        window.location.href = '/amazon-music-login';
-      }
-
-      function connectYouTubeMusic() {
-        window.location.href = '/youtube-music-login';
-      }
-      
-      // Toggle user dropdown
-      function toggleUserDropdown() {
-        const dropdown = document.getElementById('user-dropdown');
-        dropdown.classList.toggle('hidden');
-      }
-
-      // Close dropdown when clicking outside
-      document.addEventListener('click', function(event) {
-        const dropdown = document.getElementById('user-dropdown');
-        const userSection = document.getElementById('user-profile-section');
-        
-        if (!userSection.contains(event.target)) {
-          dropdown.classList.add('hidden');
-        }
-      });
-
       // Check platform connection status
       function checkPlatformStatus() {
         // Check Apple Music connection
@@ -598,12 +553,12 @@
         const btn = document.getElementById('import-action-btn');
         
         if (!playlistUrl.trim()) {
-          result.innerHTML = '<p class="text-red-400 font-medium">❌ Please enter a playlist URL</p>';
+          result.innerHTML = '<p class="text-red-400 font-medium">⛔ Please enter a playlist URL</p>';
           return;
         }
         
         if (!playlistName.trim()) {
-          result.innerHTML = '<p class="text-red-400 font-medium">❌ Please enter a playlist name</p>';
+          result.innerHTML = '<p class="text-red-400 font-medium">⛔ Please enter a playlist name</p>';
           return;
         }
         
@@ -626,11 +581,11 @@
             document.getElementById('import-playlist-url').value = '';
             document.getElementById('import-playlist-name').value = '';
           } else {
-            result.innerHTML = '<p class="text-red-400 font-medium">❌ Error: ' + (data.error || 'Unknown error') + '</p>';
+            result.innerHTML = '<p class="text-red-400 font-medium">⛔ Error: ' + (data.error || 'Unknown error') + '</p>';
           }
         })
         .catch(error => {
-          result.innerHTML = '<p class="text-red-400 font-medium">❌ Error: ' + error.message + '</p>';
+          result.innerHTML = '<p class="text-red-400 font-medium">⛔ Error: ' + error.message + '</p>';
         })
         .finally(() => {
           btn.textContent = 'Import Playlist';
@@ -646,7 +601,7 @@
         const btn = document.getElementById('export-action-btn');
         
         if (!playlistId) {
-          result.innerHTML = '<p class="text-red-400 font-medium">❌ Please select a playlist</p>';
+          result.innerHTML = '<p class="text-red-400 font-medium">⛔ Please select a playlist</p>';
           return;
         }
         
@@ -667,11 +622,11 @@
           if (data.success) {
             result.innerHTML = '<p class="text-[#38e07b] font-medium">✅ Successfully exported playlist to ' + platform + '!</p>';
           } else {
-            result.innerHTML = '<p class="text-red-400 font-medium">❌ Error: ' + (data.error || 'Unknown error') + '</p>';
+            result.innerHTML = '<p class="text-red-400 font-medium">⛔ Error: ' + (data.error || 'Unknown error') + '</p>';
           }
         })
         .catch(error => {
-          result.innerHTML = '<p class="text-red-400 font-medium">❌ Error: ' + error.message + '</p>';
+          result.innerHTML = '<p class="text-red-400 font-medium">⛔ Error: ' + error.message + '</p>';
         })
         .finally(() => {
           btn.textContent = 'Export Playlist';
@@ -679,17 +634,16 @@
         });
       }
       
-      // Go home function
+      // Navigation functions
       function goHome() {
         window.location.href = '/';
       }
       
-      // Go to transfer page function
       function goTransfer() {
         window.location.href = '/transfer';
       }
       
-      // Toggle profile dropdown
+      // Toggle profile dropdown - Using same function name as transfer page
       function toggleProfileDropdown() {
         const dropdown = document.getElementById('profile-dropdown');
         if (dropdown) {
@@ -732,59 +686,8 @@
           .catch(() => window.location.href = '/');
       }
       
-      // User info loading is now handled by dashboard.js
-      
-      // Make functions global
-      window.showFeature = showFeature;
-      window.convertLikedSongs = convertLikedSongs;
-      window.removeArtistSongs = removeArtistSongs;
-      window.importPlaylist = importPlaylist;
-      window.exportPlaylist = exportPlaylist;
-      window.goHome = goHome;
-      window.toggleProfileDropdown = toggleProfileDropdown;
-      window.closeProfileDropdown = closeProfileDropdown;
-      window.connectAppleMusic = connectAppleMusic;
-      window.connectAmazonMusic = connectAmazonMusic;
-      window.connectYouTubeMusic = connectYouTubeMusic;
-      window.logout = logout;
-      
-      // Initialize when page loads
-      document.addEventListener('DOMContentLoaded', function() {
-        console.log('Dashboard ready!');
-        initializeDashboard(); // Initialize dashboard functions from dashboard.js
-        checkPlatformStatus();
-        loadUserInfo(); 
-        // Check if a specific feature was requested
-        const urlParams = new URLSearchParams(window.location.search);
-        const feature = urlParams.get('feature');
-        if (feature) {
-          showFeature(feature);
-        }
-        
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(event) {
-          const dropdown = document.getElementById('profile-dropdown');
-          const profileButton = document.querySelector('[onclick="toggleProfileDropdown()"]');
-          
-          if (dropdown && !dropdown.contains(event.target) && !profileButton.contains(event.target)) {
-            closeProfileDropdown();
-          }
-        });
-      });
-        function toggleDropdown() {
-         document.getElementById("dropdownMenu").classList.toggle("hidden");
-        }
-
-        // Close dropdown when clicking outside
-        window.addEventListener("click", function(e) {
-          const dropdown = document.getElementById("loginDropdown");
-          if (dropdown && !dropdown.contains(e.target)) {
-            document.getElementById("dropdownMenu").classList.add("hidden");
-          }
-        });
-
-        // Auto-check login via cookie
-        function loadUserInfo() {
+      // Load user info - Using same structure as transfer page
+      function loadUserInfo() {
         fetch('/api/user', {
           credentials: 'include'
         })
@@ -840,6 +743,45 @@
             console.log('Error loading user info:', error);
           });
       }
+      
+      // Make functions global
+      window.showFeature = showFeature;
+      window.convertLikedSongs = convertLikedSongs;
+      window.removeArtistSongs = removeArtistSongs;
+      window.importPlaylist = importPlaylist;
+      window.exportPlaylist = exportPlaylist;
+      window.goHome = goHome;
+      window.goTransfer = goTransfer;
+      window.toggleProfileDropdown = toggleProfileDropdown;
+      window.closeProfileDropdown = closeProfileDropdown;
+      window.connectAppleMusic = connectAppleMusic;
+      window.connectAmazonMusic = connectAmazonMusic;
+      window.connectYouTubeMusic = connectYouTubeMusic;
+      window.logout = logout;
+      
+      // Initialize when page loads
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('Dashboard ready!');
+        loadUserInfo(); // Load user info first
+        checkPlatformStatus();
+        
+        // Check if a specific feature was requested
+        const urlParams = new URLSearchParams(window.location.search);
+        const feature = urlParams.get('feature');
+        if (feature) {
+          showFeature(feature);
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+          const dropdown = document.getElementById('profile-dropdown');
+          const profileButton = document.querySelector('[onclick="toggleProfileDropdown()"]');
+          
+          if (dropdown && profileButton && !dropdown.contains(event.target) && !profileButton.contains(event.target)) {
+            closeProfileDropdown();
+          }
+        });
+      });
     </script>
   </body>
 </html>
