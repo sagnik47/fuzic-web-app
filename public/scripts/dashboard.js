@@ -492,19 +492,17 @@ function showError(message) {
 
 }
 
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('Dashboard DOM loaded, initializing...');
-  checkAuthentication();
-  initializeDashboard();
-});
-
-// Make functions global
+// Make functions global immediately
 window.showFeature = showFeature;
 window.convertLikedSongs = convertLikedSongs;
 window.mergePlaylists = mergePlaylists;
 window.removeArtistSongs = removeArtistSongs;
-window.initializeDashboard = initializeDashboard;
+window.loadPlaylists = loadPlaylists;
 window.toggleUserDropdown = toggleUserDropdown;
 window.logout = logout;
-window.loadPlaylists = loadPlaylists;
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('Dashboard DOM loaded, initializing...');
+  loadPlaylists();
+});
