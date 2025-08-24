@@ -398,6 +398,7 @@ function showError(message) {
     toast.style.opacity = '0';
     setTimeout(() => toast.remove(), 500);
   }, 3500);
+
 }
 
 // Make functions global
@@ -408,32 +409,3 @@ window.removeArtistSongs = removeArtistSongs;
 window.initializeDashboard = initializeDashboard;
 window.toggleUserDropdown = toggleUserDropdown;
 window.logout = logout;
-
-function loadUserInfo() {
-  fetch('/api/user', {
-    credentials: 'include'
-  })
-    .then(response => response.json())
-    .then(user => {
-      const usernameEl = document.getElementById("username");
-      const profilePicEl = document.getElementById("profilePic");
-      
-      if (user && user.display_name) {
-        usernameEl.textContent = user.display_name;
-        if (user.images && user.images.length > 0) {
-          profilePicEl.src = user.images[0].url;
-        } else {
-          profilePicEl.src = "/default-avatar.png";
-        }
-      } else {
-        usernameEl.textContent = "Guest";
-        profilePicEl.src = "/default-avatar.png";
-      }
-    })
-    .catch(error => {
-      // Fallback: show as guest if API fails
-      document.getElementById("username").textContent = "Guest";
-      document.getElementById("profilePic").src = "/default-avatar.png";
-      console.log("Error loading user info:", error);
-    });
-}
