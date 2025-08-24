@@ -753,7 +753,7 @@
         console.log('Dashboard ready!');
         initializeDashboard(); // Initialize dashboard functions from dashboard.js
         checkPlatformStatus();
-        
+        loadUserInfo(); 
         // Check if a specific feature was requested
         const urlParams = new URLSearchParams(window.location.search);
         const feature = urlParams.get('feature');
@@ -784,19 +784,29 @@
         });
 
         // Auto-check login via cookie
-        document.addEventListener("DOMContentLoaded", function() {
-          const usernameEl = document.getElementById("username");
-          const profilePic = document.getElementById("profilePic");
+        function loadUserInfo() {
+          fetch('/api/user', {
+            credentials: 'include'
+          })
+            .then(response => response.json())
+            .then(user => {
+              if (user && user.display_name) {
+                const usernameEl = document.getElementById("username");
+                const profilePic = document.getElementById("profilePic");
 
-          if (document.cookie.indexOf("access_token") !== -1) {
-            usernameEl.textContent = "Sagnik"; // replace with real user info later
-            profilePic.src = "https://i.pravatar.cc/150?img=3"; // replace with Spotify pic
-          } else {
-            usernameEl.textContent = "Guest";
-            profilePic.src = "/default-avatar.png";
-          }
-        });
+                usernameEl.textContent = user.display_name;
 
+                if (user.images && user.images.length > 0) {
+                  profilePic.src = user.images[0].url;
+                } else {
+                  profilePic.src = "/default-avatar.png";
+                }
+              }
+            })
+            .catch(error => {
+              console.log("Error loading user info:", error);
+            });
+        }
     </script>
   </body>
 </html>
