@@ -105,6 +105,7 @@
             <!-- Dashboard feature buttons with animations and no persistent highlight -->
             <div class="flex justify-center mb-8">
               <div class="flex flex-1 gap-3 max-w-[480px] flex-col items-stretch px-4 py-3">
+                <button class="btn-animated dashboard-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#38e07b] text-[#111714] text-sm font-bold leading-normal tracking-[0.015em] w-full hover:shadow-lg transform transition-all duration-200" onclick="showFeature('convert')" id="convert-btn"><span class="truncate">Convert Liked Songs to Playlist</span></button>
                 <button class="btn-animated dashboard-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#29382f] text-white text-sm font-bold leading-normal tracking-[0.015em] w-full hover:shadow-lg transform transition-all duration-200" onclick="showFeature('merge')" id="merge-btn"><span class="truncate">Merge Playlists</span></button>
                 <button class="btn-animated dashboard-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#29382f] text-white text-sm font-bold leading-normal tracking-[0.015em] w-full hover:shadow-lg transform transition-all duration-200" onclick="showFeature('remove')" id="remove-btn"><span class="truncate">Remove Artist's Songs</span></button>
                 <button class="btn-animated dashboard-btn flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#29382f] text-white text-sm font-bold leading-normal tracking-[0.015em] w-full hover:shadow-lg transform transition-all duration-200" onclick="goTransfer()" id="cross-platform-btn"><span class="truncate">Transfer Playlists</span></button>
@@ -729,16 +730,16 @@
                       
                       <div class="px-4 py-2">
                         <div class="text-xs text-gray-400 mb-2">Connect More Platforms:</div>
-                        <div class="flex gap-2">
-                          <button onclick="connectAppleMusic()" class="btn-animated flex-1 text-xs px-2 py-1 bg-[#FA243C] text-white rounded hover:bg-[#E01E35] transition-all duration-200 transform hover:scale-105">
+                        <div class="flex flex-col gap-2">
+                          <button onclick="connectAppleMusic()" class="btn-animated w-full text-xs px-3 py-2 bg-[#FA243C] text-white rounded hover:bg-[#E01E35] transition-all duration-200 transform hover:scale-105">
                             Apple Music
                           </button>
                           
-                          <button onclick="connectAmazonMusic()" class="btn-animated flex-1 text-xs px-2 py-1 bg-[#FF9900] text-white rounded hover:bg-[#E68A00] transition-all duration-200 transform hover:scale-105">
+                          <button onclick="connectAmazonMusic()" class="btn-animated w-full text-xs px-3 py-2 bg-[#FF9900] text-white rounded hover:bg-[#E68A00] transition-all duration-200 transform hover:scale-105">
                             Amazon Music
                           </button>
                           
-                          <button onclick="connectYouTubeMusic()" class="btn-animated flex-1 text-xs px-2 py-1 bg-[#FF0000] text-white rounded hover:bg-[#D90000] transition-all duration-200 transform hover:scale-105">
+                          <button onclick="connectYouTubeMusic()" class="btn-animated w-full text-xs px-3 py-2 bg-[#FF0000] text-white rounded hover:bg-[#D90000] transition-all duration-200 transform hover:scale-105">
                             YouTube Music
                           </button>
                         </div>
