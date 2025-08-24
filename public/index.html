@@ -149,7 +149,7 @@
               </div>
               
               <div class="bg-[#29382f] p-6 rounded-lg text-center">
-                <h3 class="text-[#38e07b] text-lg font-bold mb-3">🌐 Transfer Playlists</h3>
+                <h3 class="text-[#38e07b] text-lg font-bold mb-3">🌍 Transfer Playlists</h3>
                 <p class="text-white text-sm">Transfer playlists between Spotify, Apple Music, and Amazon Music seamlessly.</p>
               </div>
             </div>
@@ -306,24 +306,29 @@
               </button>
               
               <!-- Profile Dropdown -->
-              <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-[#29382f] rounded-lg shadow-lg border border-[#38e07b] z-50">
+              <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-64 bg-[#29382f] rounded-lg shadow-lg border border-[#38e07b] z-50">
                 <div class="py-2">
                   <div class="px-4 py-2 text-sm text-gray-300 border-b border-[#38e07b]">
                     <div class="font-medium">${user.display_name}</div>
                     <div class="text-xs">Spotify Connected</div>
                   </div>
                   
-                  <button onclick="connectAppleMusic()" class="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#FA243C] hover:text-white transition-colors">
-                    Connect Apple Music
-                  </button>
-                  
-                  <button onclick="connectAmazonMusic()" class="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#FF9900] hover:text-white transition-colors">
-                    Connect Amazon Music
-                  </button>
-                  
-                  <button onclick="connectYouTubeMusic()" class="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#FF0000] hover:text-white transition-colors">
-                    Connect YouTube Music
-                  </button>
+                  <div class="px-4 py-2">
+                    <div class="text-xs text-gray-400 mb-2">Connect More Platforms:</div>
+                    <div class="flex gap-2">
+                      <button onclick="connectAppleMusic()" class="btn-animated flex-1 text-xs px-2 py-1 bg-[#FA243C] text-white rounded hover:bg-[#E01E35] transition-all duration-200 transform hover:scale-105">
+                        Apple Music
+                      </button>
+                      
+                      <button onclick="connectAmazonMusic()" class="btn-animated flex-1 text-xs px-2 py-1 bg-[#FF9900] text-white rounded hover:bg-[#E68A00] transition-all duration-200 transform hover:scale-105">
+                        Amazon Music
+                      </button>
+                      
+                      <button onclick="connectYouTubeMusic()" class="btn-animated flex-1 text-xs px-2 py-1 bg-[#FF0000] text-white rounded hover:bg-[#D90000] transition-all duration-200 transform hover:scale-105">
+                        YouTube Music
+                      </button>
+                    </div>
+                  </div>
                   
                   <div class="border-t border-[#38e07b] mt-2 pt-2">
                     <button onclick="logout()" class="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-900 hover:text-white transition-colors">
