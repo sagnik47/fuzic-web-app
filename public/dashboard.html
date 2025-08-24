@@ -156,7 +156,7 @@
                   
                   <button
                     class="btn-animated bg-[#38e07b] text-[#111714] px-6 py-2 rounded-full font-bold hover:bg-[#32d470] hover:shadow-lg transform transition-all duration-200"
-                    onclick="mergePlaylists()"
+                    onclick="handleMergePlaylists()"
                     id="merge-action-btn"
                   >
                     Merge Playlists
@@ -362,6 +362,17 @@
       // Dashboard JavaScript for Fuzic
       console.log('Dashboard JavaScript loading...');
       
+      // Debug function availability
+      setTimeout(() => {
+        console.log('=== FUNCTION AVAILABILITY DEBUG ===');
+        console.log('mergePlaylists function:', typeof mergePlaylists);
+        console.log('window.mergePlaylists function:', typeof window.mergePlaylists);
+        console.log('loadPlaylists function:', typeof loadPlaylists);
+        console.log('window.loadPlaylists function:', typeof window.loadPlaylists);
+        console.log('showFeature function:', typeof showFeature);
+        console.log('window.showFeature function:', typeof window.showFeature);
+      }, 1000);
+      
       // Feature management with no persistent highlighting
       function showFeature(featureName) {
         // Hide all features
@@ -382,7 +393,16 @@
         
         // Load data for specific features
         if (featureName === 'merge' || featureName === 'remove' || featureName === 'cross-platform') {
-          loadPlaylists();
+          console.log('Loading playlists for feature:', featureName);
+          if (typeof loadPlaylists === 'function') {
+            loadPlaylists();
+          } else if (typeof window.loadPlaylists === 'function') {
+            window.loadPlaylists();
+          } else {
+            console.error('loadPlaylists function not found');
+            // Fallback - try to load playlists manually
+            loadPlaylistsFallback();
+          }
         }
       }
       
@@ -415,7 +435,181 @@
           });
       }
       
-      // Playlist functions are now handled by dashboard.js
+      // Wrapper functions to ensure they work
+      function handleMergePlaylists() {
+        console.log('handleMergePlaylists called');
+        
+        // Check if mergePlaylists function exists
+        if (typeof window.mergePlaylists === 'function') {
+          console.log('Calling window.mergePlaylists');
+          window.mergePlaylists();
+        } else if (typeof mergePlaylists === 'function') {
+          console.log('Calling mergePlaylists directly');
+          mergePlaylists();
+        } else {
+          console.error('mergePlaylists function not found');
+          // Fallback implementation
+          handleMergePlaylistsFallback();
+        }
+      }
+      
+      function handleMergePlaylistsFallback() {
+        console.log('Using fallback merge function');
+        const button = document.getElementById('merge-action-btn');
+        const resultDiv = document.getElementById('merge-result');
+        const playlistNameInput = document.getElementById('merge-playlist-name');
+        const playlistName = playlistNameInput ? playlistNameInput.value.trim() : '';
+        
+        console.log('Playlist name:', playlistName);
+        
+        // Get selected playlists
+        const checkboxes = document.querySelectorAll('#playlist-list input[type="checkbox"]');
+        console.log('Found checkboxes:', checkboxes.length);
+        
+        const selectedPlaylists = Array.from(checkboxes)
+          .filter(checkbox => checkbox.checked)
+          .map(checkbox => checkbox.value);
+        
+        console.log('Selected playlists:', selectedPlaylists);
+        
+        // Validation
+        if (!playlistName) {
+          resultDiv.innerHTML = '<div class="text-red-400 p-3 bg-red-900 bg-opacity-20 rounded border border-red-500"><p class="font-bold">❌ Validation Error</p><p class="text-sm">Please enter a playlist name</p></div>';
+          return;
+        }
+        
+        if (selectedPlaylists.length < 2) {
+          resultDiv.innerHTML = '<div class="text-red-400 p-3 bg-red-900 bg-opacity-20 rounded border border-red-500"><p class="font-bold">❌ Validation Error</p><p class="text-sm">Please select at least 2 playlists to merge (currently selected: ' + selectedPlaylists.length + ')</p></div>';
+          return;
+        }
+        
+        // Show loading
+        button.textContent = 'Merging...';
+        button.disabled = true;
+        resultDiv.innerHTML = '<div class="text-yellow-400 p-3 bg-yellow-900 bg-opacity-20 rounded border border-yellow-500"><p>🔄 Merging playlists...</p></div>';
+        
+        const payload = {
+          name: playlistName,
+          selectedPlaylists: selectedPlaylists
+        };
+        console.log('Sending merge request with payload:', payload);
+        
+        fetch('/api/merge-playlists', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify(payload)
+        })
+        .then(response => {
+          console.log('Merge API response status:', response.status);
+          return response.text().then(text => {
+            console.log('Merge API raw response:', text);
+            try {
+              return JSON.parse(text);
+            } catch (parseError) {
+              console.error('Failed to parse response as JSON:', parseError);
+              throw new Error('Invalid response from server: ' + text);
+            }
+          });
+        })
+        .then(data => {
+          if (data.success || data.playlist) {
+            resultDiv.innerHTML = '<div class="text-green-400 p-3 bg-green-900 bg-opacity-20 rounded border border-green-500"><p class="font-bold">✅ Success!</p><p>Created merged playlist: "' + (data.playlist.name || playlistName) + '"</p><p>Added ' + (data.tracksAdded || 'unknown number of') + ' unique tracks</p>' + (data.playlist && data.playlist.external_urls && data.playlist.external_urls.spotify ? '<a href="' + data.playlist.external_urls.spotify + '" target="_blank" class="text-[#38e07b] underline hover:text-[#32d470]">View on Spotify</a>' : '') + '</div>';
+            // Clear form
+            document.getElementById('merge-playlist-name').value = '';
+            document.querySelectorAll('#playlist-list input[type="checkbox"]').forEach(cb => cb.checked = false);
+            // Reload playlists
+            setTimeout(() => {
+              if (typeof loadPlaylists === 'function') {
+                loadPlaylists();
+              }
+            }, 1000);
+          } else {
+            throw new Error(data.error || 'Unknown error occurred');
+          }
+        })
+        .catch(error => {
+          console.error('Error merging playlists:', error);
+          resultDiv.innerHTML = '<div class="text-red-400 p-3 bg-red-900 bg-opacity-20 rounded border border-red-500"><p class="font-bold">❌ Merge Failed</p><p class="text-sm mt-1">Error: ' + error.message + '</p><button onclick="loadPlaylists()" class="mt-2 px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700">Reload Playlists</button></div>';
+        })
+        .finally(() => {
+          button.textContent = 'Merge Playlists';
+          button.disabled = false;
+        });
+      }
+      
+      function loadPlaylistsFallback() {
+        console.log('Loading playlists with fallback function');
+        const playlistList = document.getElementById('playlist-list');
+        if (playlistList) {
+          playlistList.innerHTML = '<div class="text-yellow-400">Loading playlists...</div>';
+        }
+        
+        fetch('/api/playlists', {
+          credentials: 'include'
+        })
+        .then(response => {
+          console.log('Playlists API response status:', response.status);
+          if (!response.ok) {
+            throw new Error('HTTP ' + response.status + ': Failed to load playlists');
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('Playlists API response data:', data);
+          if (data.items && Array.isArray(data.items)) {
+            updatePlaylistUIFallback(data.items);
+          } else {
+            throw new Error('Invalid playlist data received');
+          }
+        })
+        .catch(error => {
+          console.error('Error loading playlists:', error);
+          if (playlistList) {
+            playlistList.innerHTML = '<div class="text-red-400 p-3 bg-red-900 bg-opacity-20 rounded border border-red-500"><p class="font-bold">❌ Failed to load playlists</p><p class="text-sm mt-1">Error: ' + error.message + '</p><button onclick="loadPlaylistsFallback()" class="mt-2 px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700">Retry</button></div>';
+          }
+        });
+      }
+      
+      function updatePlaylistUIFallback(playlists) {
+        console.log('Updating playlist UI with', playlists.length, 'playlists');
+        
+        // Update merge playlist list
+        const playlistList = document.getElementById('playlist-list');
+        if (playlistList) {
+          if (playlists.length === 0) {
+            playlistList.innerHTML = '<div class="text-gray-400 p-3 bg-gray-800 bg-opacity-20 rounded border border-gray-600"><p>No playlists found.</p><button onclick="loadPlaylistsFallback()" class="mt-2 px-3 py-1 bg-[#38e07b] text-[#111714] rounded text-xs hover:bg-[#32d470]">Refresh</button></div>';
+          } else {
+            playlistList.innerHTML = playlists.map((playlist, index) => 
+              '<label class="flex items-center p-2 bg-[#111714] rounded cursor-pointer hover:bg-[#1a1a1a] transition-colors">' +
+              '<input type="checkbox" value="' + playlist.id + '" class="mr-3 text-[#38e07b] bg-[#111714] border-[#38e07b] rounded focus:ring-[#38e07b]">' +
+              '<span class="text-white">' + playlist.name + ' (' + playlist.tracks.total + ' tracks)</span>' +
+              '</label>'
+            ).join('');
+            console.log('Added', playlists.length, 'playlist checkboxes');
+          }
+        }
+        
+        // Update remove playlist select
+        const removeSelect = document.getElementById('remove-playlist-select');
+        if (removeSelect) {
+          removeSelect.innerHTML = '<option value="">Select a playlist...</option>' +
+            playlists.map(playlist => 
+              '<option value="' + playlist.id + '">' + playlist.name + ' (' + playlist.tracks.total + ' tracks)</option>'
+            ).join('');
+        }
+        
+        // Update export playlist select
+        const exportSelect = document.getElementById('export-playlist-select');
+        if (exportSelect) {
+          exportSelect.innerHTML = '<option value="">Select a playlist...</option>' +
+            playlists.map(playlist => 
+              '<option value="' + playlist.id + '">' + playlist.name + ' (' + playlist.tracks.total + ' tracks)</option>'
+            ).join('');
+        }
+      }
       
       // Remove artist songs function is now handled by dashboard.js
       
