@@ -415,9 +415,150 @@
           });
       }
       
-      // Playlist functions are now handled by dashboard.js
+      // Load user playlists
+      function loadPlaylists() {
+        fetch('/api/playlists', {
+          credentials: 'include'
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.items) {
+              updatePlaylistUI(data.items);
+            }
+          })
+          .catch(error => {
+            console.error('Error loading playlists:', error);
+          });
+      }
       
-      // Remove artist songs function is now handled by dashboard.js
+      // Update playlist UI
+      function updatePlaylistUI(playlists) {
+        // Update merge playlist list
+        const playlistList = document.getElementById('playlist-list');
+        if (playlistList) {
+          playlistList.innerHTML = playlists.map(playlist => 
+            '<label class="flex items-center p-2 bg-[#111714] rounded cursor-pointer hover:bg-[#1a1a1a]">' +
+            '<input type="checkbox" value="' + playlist.id + '" class="mr-3 text-[#38e07b]">' +
+            '<span class="text-white">' + playlist.name + ' (' + playlist.tracks.total + ' tracks)</span>' +
+            '</label>'
+          ).join('');
+        }
+        
+        // Update remove playlist select
+        const removeSelect = document.getElementById('remove-playlist-select');
+        if (removeSelect) {
+          removeSelect.innerHTML = '<option value="">Select a playlist...</option>' +
+            playlists.map(playlist => 
+              '<option value="' + playlist.id + '">' + playlist.name + ' (' + playlist.tracks.total + ' tracks)</option>'
+            ).join('');
+        }
+        
+        // Update export playlist select
+        const exportSelect = document.getElementById('export-playlist-select');
+        if (exportSelect) {
+          exportSelect.innerHTML = '<option value="">Select a playlist...</option>' +
+            playlists.map(playlist => 
+              '<option value="' + playlist.id + '">' + playlist.name + ' (' + playlist.tracks.total + ' tracks)</option>'
+            ).join('');
+        }
+      }
+      
+      // Merge playlists
+      function mergePlaylists() {
+        const playlistName = document.getElementById('merge-playlist-name').value.trim();
+        const selectedPlaylists = Array.from(document.querySelectorAll('#playlist-list input[type="checkbox"]:checked'))
+          .map(checkbox => checkbox.value);
+        const result = document.getElementById('merge-result');
+        const btn = document.getElementById('merge-action-btn');
+        
+        if (!playlistName) {
+          result.innerHTML = '<p class="text-red-400 font-medium">⛔ Please enter a playlist name</p>';
+          return;
+        }
+        
+        if (selectedPlaylists.length < 2) {
+          result.innerHTML = '<p class="text-red-400 font-medium">⛔ Please select at least 2 playlists to merge</p>';
+          return;
+        }
+        
+        btn.textContent = 'Merging...';
+        btn.disabled = true;
+        
+        fetch('/api/merge-playlists', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            name: playlistName,
+            selectedPlaylists: selectedPlaylists
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            result.innerHTML = '<p class="text-[#38e07b] font-medium">✅ Successfully created merged playlist "' + data.playlist.name + '" with ' + data.tracksAdded + ' tracks!</p>';
+            document.getElementById('merge-playlist-name').value = '';
+            document.querySelectorAll('#playlist-list input[type="checkbox"]').forEach(cb => cb.checked = false);
+            loadPlaylists(); // Reload to show new playlist
+          } else {
+            result.innerHTML = '<p class="text-red-400 font-medium">⛔ Error: ' + (data.error || 'Unknown error') + '</p>';
+          }
+        })
+        .catch(error => {
+          result.innerHTML = '<p class="text-red-400 font-medium">⛔ Error: ' + error.message + '</p>';
+        })
+        .finally(() => {
+          btn.textContent = 'Merge Playlists';
+          btn.disabled = false;
+        });
+      }
+      
+      // Remove artist songs
+      function removeArtistSongs() {
+        const playlistId = document.getElementById('remove-playlist-select').value;
+        const artistName = document.getElementById('artist-name').value;
+        const result = document.getElementById('remove-result');
+        const btn = document.getElementById('remove-action-btn');
+        
+        if (!playlistId) {
+          result.innerHTML = '<p class="text-red-400 font-medium">⛔ Please select a playlist</p>';
+          return;
+        }
+        
+        if (!artistName.trim()) {
+          result.innerHTML = '<p class="text-red-400 font-medium">⛔ Please enter an artist name</p>';
+          return;
+        }
+        
+        btn.textContent = 'Removing...';
+        btn.disabled = true;
+        
+        fetch('/api/remove-artist-songs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            playlistId: playlistId,
+            artistName: artistName
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            result.innerHTML = '<p class="text-[#38e07b] font-medium">✅ Successfully removed ' + data.tracksRemoved + ' tracks by "' + artistName + '"</p>';
+            document.getElementById('artist-name').value = '';
+          } else {
+            result.innerHTML = '<p class="text-red-400 font-medium">⛔ Error: ' + (data.error || 'Unknown error') + '</p>';
+          }
+        })
+        .catch(error => {
+          result.innerHTML = '<p class="text-red-400 font-medium">⛔ Error: ' + error.message + '</p>';
+        })
+        .finally(() => {
+          btn.textContent = 'Remove Songs';
+          btn.disabled = false;
+        });
+      }
       
       // Check platform connection status
       function checkPlatformStatus() {
