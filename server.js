@@ -371,7 +371,7 @@ app.get('/api/image-exists/:filename', (req, res) => {
   });
 });
 
-// Merge playlists
+// Merge playlists (fix 0.3)
 app.post('/api/merge-playlists', async (req, res) => {
   try {
     console.log('Starting merge playlists process...');
