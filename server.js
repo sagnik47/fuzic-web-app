@@ -375,370 +375,272 @@ app.get('/api/image-exists/:filename', (req, res) => {
 app.post('/api/merge-playlists', async (req, res) => {
   try {
     console.log('Starting merge playlists process...');
-    
-    // Step 1: Parse and validate request body
     console.log('Raw request body:', req.body);
     console.log('Request headers:', req.headers);
-    
-    const { name, selectedPlaylists } = req.body;
-    console.log('Parsed payload:', { name, selectedPlaylists });
-    console.log('Name type:', typeof name);
-    console.log('Name length:', name ? name.length : 'undefined');
-    
-    // Validate playlist name with fallback checks
-    let playlistName = name;
-    
-    // Check if name is in a different field (fallback)
-    if (!playlistName && req.body.newPlaylistName) {
-      playlistName = req.body.newPlaylistName;
-      console.log('Using fallback newPlaylistName:', playlistName);
+
+    // -- Basic validation & payload normalization
+    let { name, selectedPlaylists } = req.body;
+    if (!name && req.body.newPlaylistName) name = req.body.newPlaylistName;
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+      console.error('Playlist name missing or invalid. Request body keys:', Object.keys(req.body));
+      return res.status(400).json({ success: false, error: 'Playlist name is required and must be a non-empty string' });
     }
-    
-    if (!playlistName || typeof playlistName !== 'string' || playlistName.trim() === '') {
-      console.error('Playlist name is missing, empty, or not a string');
-      console.error('Available fields in req.body:', Object.keys(req.body));
-      return res.status(400).json({
-        success: false,
-        error: 'Playlist name is required and must be a non-empty string'
-      });
-    }
-    
-    // Trim the name
-    playlistName = playlistName.trim();
-    console.log('Final playlist name:', playlistName);
-    
-    // Validate selected playlists
+    const playlistName = name.trim();
+
     if (!selectedPlaylists || !Array.isArray(selectedPlaylists) || selectedPlaylists.length < 2) {
-      console.error('Invalid selected playlists:', selectedPlaylists);
-      return res.status(400).json({
-        success: false,
-        error: 'Please provide a name and at least 2 playlists to merge.'
-      });
+      console.error('selectedPlaylists missing/invalid:', selectedPlaylists);
+      return res.status(400).json({ success: false, error: 'Please provide a name and at least 2 playlists to merge.' });
     }
-    
-    console.log('Playlist name:', playlistName);
-    console.log('Selected playlists:', selectedPlaylists);
-    
-    // Validate selected playlists
-    if (!selectedPlaylists || !Array.isArray(selectedPlaylists) || selectedPlaylists.length < 2) {
-      console.error('Invalid selectedPlaylists: missing, not array, or insufficient playlists');
-      return res.status(400).json({
-        success: false,
-        error: 'Please select at least 2 playlists to merge'
-      });
-    }
-    
-    // Validate each playlist ID
-    for (const playlistId of selectedPlaylists) {
-      if (!playlistId || typeof playlistId !== 'string') {
-        console.error('Invalid playlist ID:', playlistId);
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid playlist ID provided'
-        });
+
+    // Validate each playlist id
+    for (const pid of selectedPlaylists) {
+      if (!pid || typeof pid !== 'string') {
+        return res.status(400).json({ success: false, error: 'Invalid playlist ID provided' });
       }
     }
-    
-    // Ensure access token is set
-    const token = req.cookies.access_token;
-    if (!token) {
-      console.error('No access token found in cookies');
-      return res.status(401).json({
-        success: false,
-        error: 'No access token available. Please log in again.'
-      });
+
+    // -- Ensure access token present
+    const accessToken = req.cookies && req.cookies.access_token;
+    const refreshToken = req.cookies && req.cookies.refresh_token;
+    if (!accessToken) {
+      console.error('No access token in cookies');
+      return res.status(401).json({ success: false, error: 'No access token available. Please log in again.' });
     }
-    
-    spotifyApi.setAccessToken(token);
-    console.log('Access token set successfully');
-    
-    // Step 2: Get user info
-    let userInfo;
-    try {
-      console.log('Fetching user information...');
-      userInfo = await spotifyApi.getMe();
-      if (!userInfo || !userInfo.body) {
-        console.error('getMe() failed: No user info returned');
-        return res.status(500).json({
-          success: false,
-          error: 'Failed to get user information from Spotify'
-        });
-      }
-      console.log('Merging playlists for user:', userInfo.body.display_name);
-    } catch (error) {
-      console.error('getMe() error:', error);
-      return res.status(500).json({
-        success: false,
-        error: 'Failed to get user information from Spotify'
-      });
-    }
-    
-    const userId = userInfo.body.id;
-    console.log('User ID:', userId);
-    
-    // Validate user ID
-    if (!userId) {
-      console.error('No user ID returned from Spotify');
-      return res.status(500).json({
-        success: false,
-        error: 'Failed to get user ID from Spotify'
-      });
-    }
-    
-    // Step 3: Get tracks from all playlists with proper error handling
-    let allTracks = [];
-    const seenTrackIds = new Set();
-    
-    for (let i = 0; i < selectedPlaylists.length; i++) {
-      const playlistId = selectedPlaylists[i];
-      console.log(`Processing playlist ${i + 1}/${selectedPlaylists.length}: ${playlistId}`);
-      
-      try {
-        // Check if this is "Liked Songs" (special handling)
-        if (playlistId === 'liked-songs') {
-          console.log('Processing Liked Songs...');
-          
-          // Get liked songs with sequential pagination to preserve order
-          let offset = 0;
-          const limit = 50;
-          let hasMore = true;
-          let likedSongsBatch = [];
-          
-          // Fetch all liked songs sequentially to preserve order
-          while (hasMore) {
-            console.log(`Fetching liked songs batch (offset: ${offset}, limit: ${limit})`);
-            const likedSongsResponse = await spotifyApi.getMySavedTracks({ limit, offset });
-            if (!likedSongsResponse || !likedSongsResponse.body) {
-              console.error('getMySavedTracks() failed for Liked Songs');
-              return res.status(500).json({
-                success: false,
-                error: 'Failed to get liked songs from Spotify'
-              });
-            }
-            
-            // Store the entire batch to preserve order
-            likedSongsBatch.push(...likedSongsResponse.body.items);
-            console.log(`Fetched ${likedSongsResponse.body.items.length} liked songs (total so far: ${likedSongsBatch.length})`);
-            
-            // Check if we've reached the end
-            if (likedSongsResponse.body.items.length < limit) {
-              hasMore = false;
-            } else {
-              offset += limit;
-            }
-          }
-          
-          // Process all liked songs in order, removing duplicates
-          const uniqueTracks = [];
-          const likedSongsSeenIds = new Set();
-          
-          for (const item of likedSongsBatch) {
-            if (item.track && !likedSongsSeenIds.has(item.track.id)) {
-              likedSongsSeenIds.add(item.track.id);
-              uniqueTracks.push(item.track.uri);
-            }
-          }
-          
-          allTracks.push(...uniqueTracks);
-          console.log(`Added ${uniqueTracks.length} unique liked songs in original order`);
-        } else {
-          // Regular playlist
-          console.log(`Fetching tracks for playlist: ${playlistId}`);
-          const playlistResponse = await spotifyApi.getPlaylistTracks(playlistId);
-          
-          if (!playlistResponse || !playlistResponse.body) {
-            console.error(`getPlaylistTracks() failed for playlist: ${playlistId}`);
-            return res.status(500).json({
-              success: false,
-              error: `Failed to get tracks for playlist: ${playlistId}`
-            });
-          }
-          
-          const tracks = playlistResponse.body.items
-            .filter(item => item.track && !seenTrackIds.has(item.track.id))
-            .map(item => {
-              seenTrackIds.add(item.track.id);
-              return item.track.uri;
-            });
-          allTracks.push(...tracks);
-          console.log(`Fetched ${playlistResponse.body.items.length} tracks from playlist ${playlistId} (total so far: ${allTracks.length})`);
+    spotifyApi.setAccessToken(accessToken);
+
+    // Helper: try to refresh token if 401 and cookie refresh token exists
+    async function tryRefreshAccessTokenIfNeeded(err) {
+      if (err && err.statusCode === 401 && refreshToken) {
+        console.log('Access token expired — attempting refresh using refresh token...');
+        try {
+          spotifyApi.setRefreshToken(refreshToken);
+          const refreshRes = await spotifyApi.refreshAccessToken();
+          const newAccessToken = refreshRes.body.access_token;
+          spotifyApi.setAccessToken(newAccessToken);
+
+          // Update cookie (make sure cookie config matches your production settings)
+          res.cookie('access_token', newAccessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 2592000000,
+            path: '/'
+          });
+
+          console.log('Access token refreshed successfully');
+          return true;
+        } catch (refreshErr) {
+          console.error('Refresh failed:', refreshErr);
+          return false;
         }
-      } catch (error) {
-        console.error(`Error processing playlist ${playlistId}:`, error);
-        return res.status(500).json({
-          success: false,
-          error: `Failed to process playlist: ${playlistId}`
-        });
+      }
+      return false;
+    }
+
+    // Helper: robust createPlaylist with fallbacks
+    async function createPlaylistWithFallback(userId, name, options) {
+      const attempts = [];
+      // Candidate call signatures in order:
+      const callCandidates = [
+        async () => spotifyApi.createPlaylist(userId, name, options),
+        async () => spotifyApi.createPlaylist(name, options),
+        async () => spotifyApi.createPlaylist({ name, ...options }),
+        async () => spotifyApi.createPlaylist(undefined, { name, ...options })
+      ];
+
+      for (const call of callCandidates) {
+        try {
+          const response = await call();
+          attempts.push({ ok: true, response });
+          // If we got a response object with a body that has an id — success
+          if (response && response.body && response.body.id) {
+            return response;
+          } else {
+            // If response exists but missing body or id, log and continue to next signature
+            console.warn('createPlaylist returned but missing body.id; continuing to next signature. Response snapshot:', JSON.stringify(response && response.body).slice(0, 500));
+          }
+        } catch (err) {
+          attempts.push({ ok: false, error: err });
+          // If 401, attempt refresh once and then retry this same call after refresh
+          if (err && err.statusCode === 401) {
+            const refreshed = await tryRefreshAccessTokenIfNeeded(err);
+            if (refreshed) {
+              try {
+                const retryResp = await call();
+                if (retryResp && retryResp.body && retryResp.body.id) return retryResp;
+              } catch (retryErr) {
+                // fall through to try other signatures
+                console.error('Retry after refresh failed:', retryErr);
+              }
+            }
+          }
+          // log and move to next candidate
+          console.warn('createPlaylist candidate failed:', err && err.statusCode, err && err.body && err.body.error && err.body.error.message);
+        }
+      }
+
+      // If none succeeded, throw a descriptive error with attempt details
+      const consolidated = attempts.map(a => a.ok ? `OK:${a.response && (a.response.statusCode || 'resp')}` : `ERR:${a.error && (a.error.statusCode || a.error.message)}`).join(' | ');
+      const error = new Error('All createPlaylist signatures failed. Attempts: ' + consolidated);
+      error.attempts = attempts;
+      throw error;
+    }
+
+    // -- Get user info
+    let me;
+    try {
+      me = await spotifyApi.getMe();
+      if (!me || !me.body || !me.body.id) {
+        console.error('getMe() returned invalid user object:', me && me.body);
+        return res.status(500).json({ success: false, error: 'Failed to get user information from Spotify' });
+      }
+    } catch (err) {
+      console.error('getMe() error:', err);
+      // Try refresh token flow if 401
+      const refreshed = await tryRefreshAccessTokenIfNeeded(err);
+      if (refreshed) {
+        try {
+          me = await spotifyApi.getMe();
+        } catch (err2) {
+          console.error('getMe() after refresh failed:', err2);
+          return res.status(500).json({ success: false, error: 'Failed to get user information from Spotify after token refresh' });
+        }
+      } else {
+        return res.status(500).json({ success: false, error: 'Failed to get user information from Spotify' });
       }
     }
-    
-    console.log(`Total unique tracks found: ${allTracks.length}`);
-    
-    if (allTracks.length === 0) {
-      console.log('No tracks found in selected playlists');
-      return res.status(400).json({
-        success: false,
-        error: 'No tracks found in the selected playlists'
-      });
+
+    const userId = me.body.id;
+    console.log('Merging playlists for user:', me.body.display_name || userId);
+
+    // -- Gather tracks in order (preserve ordering)
+    const allTracks = [];
+    const seenTrackIds = new Set();
+
+    for (let idx = 0; idx < selectedPlaylists.length; idx++) {
+      const pid = selectedPlaylists[idx];
+      console.log(`Processing (${idx + 1}/${selectedPlaylists.length}):`, pid);
+
+      if (pid === 'liked-songs') {
+        // Sequential pagination to preserve order
+        let offset = 0;
+        const limit = 50;
+        let keepGoing = true;
+        const liked = [];
+
+        while (keepGoing) {
+          const response = await spotifyApi.getMySavedTracks({ limit, offset });
+          if (!response || !response.body || !Array.isArray(response.body.items)) {
+            throw new Error('Failed to fetch liked songs from Spotify');
+          }
+          liked.push(...response.body.items);
+          if (response.body.items.length < limit) keepGoing = false;
+          else offset += limit;
+        }
+
+        for (const item of liked) {
+          if (item.track && item.track.id && !seenTrackIds.has(item.track.id)) {
+            seenTrackIds.add(item.track.id);
+            if (item.track.uri) allTracks.push(item.track.uri);
+          }
+        }
+
+        console.log(`Added ${liked.length} liked songs (unique added ${allTracks.length})`);
+      } else {
+        // Regular playlist — paginate playlist tracks as well to be safe
+        let offset = 0;
+        const limit = 100;
+        let keepGoing = true;
+
+        while (keepGoing) {
+          const response = await spotifyApi.getPlaylistTracks(pid, { limit, offset });
+          if (!response || !response.body || !Array.isArray(response.body.items)) {
+            throw new Error(`Failed to fetch tracks for playlist ${pid}`);
+          }
+
+          for (const item of response.body.items) {
+            if (item.track && item.track.id && !seenTrackIds.has(item.track.id)) {
+              seenTrackIds.add(item.track.id);
+              if (item.track.uri) allTracks.push(item.track.uri);
+            }
+          }
+
+          if (response.body.items.length < limit) keepGoing = false;
+          else offset += limit;
+        }
+
+        console.log(`Playlist ${pid} processed — total tracks so far: ${allTracks.length}`);
+      }
     }
-    
-    // Step 4: Create new playlist with proper validation
-    console.log('Creating new merged playlist:', playlistName);
-    console.log('User ID:', userId);
-    
+
+    console.log(`Total unique tracks to add: ${allTracks.length}`);
+    if (allTracks.length === 0) {
+      return res.status(400).json({ success: false, error: 'No tracks found in the selected playlists' });
+    }
+
+    // -- Create playlist robustly with fallback & refresh attempt
+    console.log('Creating new playlist:', playlistName);
+    const playlistOptions = { description: 'Merged playlist via Fuzic', public: true };
+
     let newPlaylistResponse;
     try {
-      // Create playlist with proper options object
-      const playlistOptions = {
-        description: 'Merged playlist via Fuzic',
-        public: true
-      };
-      
-      console.log('Creating playlist with options:', playlistOptions);
-      
-      newPlaylistResponse = await spotifyApi.createPlaylist(userId, playlistName, playlistOptions);
-      
-      console.log('Created Playlist Response:', JSON.stringify(newPlaylistResponse, null, 2));
-      
-      // Validate the response structure
-      if (!newPlaylistResponse) {
-        console.error('createPlaylist() failed: No response returned');
-        return res.status(500).json({
-          success: false,
-          error: 'Spotify API did not return a valid playlist object.'
-        });
+      newPlaylistResponse = await createPlaylistWithFallback(userId, playlistName, playlistOptions);
+    } catch (err) {
+      console.error('createPlaylistWithFallback failed:', err);
+      // If err.attempts exist, include the most relevant Spotify error message if present
+      const firstError = (err.attempts && err.attempts.find(a => !a.ok && a.error)) ? err.attempts.find(a => !a.ok && a.error).error : null;
+      if (firstError) {
+        console.error('Underlying spotify error details:', firstError.statusCode, firstError.body);
+        if (firstError.statusCode === 403) {
+          return res.status(403).json({ success: false, error: 'Permission denied. Ensure your app has playlist-modify-public or playlist-modify-private scopes and user consented.' });
+        }
+        if (firstError.statusCode === 401) {
+          return res.status(401).json({ success: false, error: 'Authentication expired. Please log in again.' });
+        }
       }
-      
-      if (!newPlaylistResponse.body) {
-        console.error('createPlaylist() failed: No body in response');
-        console.error('Full response:', JSON.stringify(newPlaylistResponse));
-        return res.status(500).json({
-          success: false,
-          error: 'Spotify API did not return a valid playlist object.'
-        });
-      }
-      
-      // Validate required fields
-      if (!newPlaylistResponse.body.id) {
-        console.error('createPlaylist() failed: Missing playlist ID');
-        console.error('Response body:', JSON.stringify(newPlaylistResponse.body));
-        return res.status(500).json({
-          success: false,
-          error: 'Spotify API did not return a valid playlist object.'
-        });
-      }
-      
-      if (!newPlaylistResponse.body.name) {
-        console.error('createPlaylist() failed: Missing playlist name');
-        console.error('Response body:', JSON.stringify(newPlaylistResponse.body));
-        return res.status(500).json({
-          success: false,
-          error: 'Spotify API did not return a valid playlist object.'
-        });
-      }
-      
-      console.log('Playlist created successfully:', {
-        id: newPlaylistResponse.body.id,
-        name: newPlaylistResponse.body.name,
-        uri: newPlaylistResponse.body.uri,
-        external_urls: newPlaylistResponse.body.external_urls
-      });
-    } catch (error) {
-      console.error('createPlaylist() error:', error);
-      console.error('Error details:', {
-        statusCode: error.statusCode,
-        body: error.body,
-        message: error.message
-      });
-      return res.status(500).json({
-        success: false,
-        error: 'Failed to create playlist'
-      });
+      return res.status(500).json({ success: false, error: 'Failed to create playlist' });
     }
-    
+
+    if (!newPlaylistResponse || !newPlaylistResponse.body || !newPlaylistResponse.body.id) {
+      console.error('createPlaylist returned no valid body after fallback attempts:', JSON.stringify(newPlaylistResponse && newPlaylistResponse.body).slice(0, 1000));
+      return res.status(500).json({ success: false, error: 'Spotify API did not return a valid playlist object.' });
+    }
+
     const newPlaylistId = newPlaylistResponse.body.id;
-    
-    // Step 5: Add tracks to new playlist in batches of 100
-    if (allTracks.length > 0) {
-      try {
-        console.log(`Tracks to add:`, allTracks);
-        console.log(`Adding ${allTracks.length} tracks to new playlist...`);
-        
-        // Validate track URIs
-        if (!Array.isArray(allTracks) || allTracks.length === 0) {
-          console.error('No valid tracks to add');
-          return res.status(400).json({
-            success: false,
-            error: 'No valid tracks found to add to playlist'
-          });
-        }
-        
-        // Check if all tracks are valid Spotify URIs
-        const validTracks = allTracks.filter(track => track && track.startsWith('spotify:track:'));
-        if (validTracks.length !== allTracks.length) {
-          console.error('Some tracks are not valid Spotify URIs');
-          console.error('Invalid tracks:', allTracks.filter(track => !track || !track.startsWith('spotify:track:')));
-        }
-        
-        for (let i = 0; i < allTracks.length; i += 100) {
-          const batch = allTracks.slice(i, i + 100);
-          console.log(`Adding batch ${Math.floor(i/100) + 1} (${batch.length} tracks)`);
-          
-          const addTracksResponse = await spotifyApi.addTracksToPlaylist(newPlaylistId, batch);
-          if (!addTracksResponse || !addTracksResponse.body) {
-            console.error('addTracksToPlaylist() failed: No response body');
-            return res.status(500).json({
-              success: false,
-              error: 'Failed to add tracks to playlist'
-            });
-          }
-        }
-        
-        console.log('All tracks added successfully');
-      } catch (error) {
-        console.error('addTracksToPlaylist() error:', error);
-        return res.status(500).json({
-          success: false,
-          error: 'Failed to add tracks to playlist'
-        });
+    console.log('New playlist created:', newPlaylistId, newPlaylistResponse.body.name);
+
+    // -- Add tracks in batches of 100 preserving order
+    try {
+      for (let i = 0; i < allTracks.length; i += 100) {
+        const batch = allTracks.slice(i, i + 100);
+        console.log(`Adding batch ${Math.floor(i / 100) + 1} (${batch.length} tracks)`);
+        await spotifyApi.addTracksToPlaylist(newPlaylistId, batch);
       }
-    } else {
-      console.log('No tracks to add to playlist');
+      console.log('All tracks added.');
+    } catch (err) {
+      console.error('Error while adding tracks to playlist:', err && err.statusCode, err && err.body || err && err.message);
+      return res.status(500).json({ success: false, error: 'Failed to add tracks to playlist' });
     }
-    
-    console.log('Merge playlists process completed successfully');
-    res.json({ 
-      success: true, 
+
+    // -- Success
+    return res.json({
+      success: true,
       playlist: {
         id: newPlaylistResponse.body.id,
         name: newPlaylistResponse.body.name,
         uri: newPlaylistResponse.body.uri,
         external_urls: newPlaylistResponse.body.external_urls
       },
-      tracksAdded: allTracks.length 
+      tracksAdded: allTracks.length
     });
-    
+
   } catch (error) {
-    console.error('Unexpected error in merge playlists:', error);
-    
-    let errorMessage = 'Failed to merge playlists';
-    
-    if (error.statusCode === 401) {
-      errorMessage = 'Authentication expired. Please log in again.';
-    } else if (error.statusCode === 403) {
-      errorMessage = 'Permission denied. Please check app permissions.';
-    } else if (error.body && error.body.error && error.body.error.message) {
-      errorMessage = error.body.error.message;
-    } else if (error.message) {
-      errorMessage = error.message;
-    }
-    
-    res.status(error.statusCode || 500).json({ 
-      success: false,
-      error: errorMessage 
-    });
+    console.error('Unexpected error in merge-playlists:', error);
+    const errMsg = (error && error.message) ? error.message : 'Failed to merge playlists';
+    return res.status(500).json({ success: false, error: errMsg });
   }
 });
+
 
 // Remove artist's songs from playlist
 app.post('/api/remove-artist-songs', refreshTokenIfNeeded, async (req, res) => {
