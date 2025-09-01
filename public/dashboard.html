@@ -464,55 +464,110 @@
       }
       
       // Merge playlists
-      function mergePlaylists() {
-        const playlistName = document.getElementById('merge-playlist-name').value.trim();
-        const selectedPlaylists = Array.from(document.querySelectorAll('#playlist-list input[type="checkbox"]:checked'))
-          .map(checkbox => checkbox.value);
-        const result = document.getElementById('merge-result');
-        const btn = document.getElementById('merge-action-btn');
-        
-        if (!playlistName) {
-          result.innerHTML = '<p class="text-red-400 font-medium">⛔ Please enter a playlist name</p>';
-          return;
-        }
-        
-        if (selectedPlaylists.length < 2) {
-          result.innerHTML = '<p class="text-red-400 font-medium">⛔ Please select at least 2 playlists to merge</p>';
-          return;
-        }
-        
-        btn.textContent = 'Merging...';
-        btn.disabled = true;
-        
-        fetch('/api/merge-playlists', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            name: playlistName,
-            selectedPlaylists: selectedPlaylists
-          })
+      // Additional error handling for the loadPlaylists function
+      function loadPlaylists() {
+        fetch('/api/playlists', {
+          credentials: 'include'
         })
-        .then(response => response.json())
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: Failed to load playlists`);
+          }
+          return response.json();
+        })
         .then(data => {
-          if (data.success) {
-            result.innerHTML = '<p class="text-[#38e07b] font-medium">✅ Successfully created merged playlist "' + data.playlist.name + '" with ' + data.tracksAdded + ' tracks!</p>';
-            document.getElementById('merge-playlist-name').value = '';
-            document.querySelectorAll('#playlist-list input[type="checkbox"]').forEach(cb => cb.checked = false);
-            loadPlaylists(); // Reload to show new playlist
+          if (data && data.items && Array.isArray(data.items)) {
+            updatePlaylistUI(data.items);
           } else {
-            result.innerHTML = '<p class="text-red-400 font-medium">⛔ Error: ' + (data.error || 'Unknown error') + '</p>';
+            console.error('Invalid playlist data received:', data);
+            // Show user-friendly message
+            const playlistList = document.getElementById('playlist-list');
+            if (playlistList) {
+              playlistList.innerHTML = '<p class="text-red-400">Unable to load playlists. Please try refreshing the page.</p>';
+            }
           }
         })
         .catch(error => {
-          result.innerHTML = '<p class="text-red-400 font-medium">⛔ Error: ' + error.message + '</p>';
-        })
-        .finally(() => {
-          btn.textContent = 'Merge Playlists';
-          btn.disabled = false;
+          console.error('Error loading playlists:', error);
+          
+          // Update UI to show error
+          const playlistList = document.getElementById('playlist-list');
+          const removeSelect = document.getElementById('remove-playlist-select');
+          const exportSelect = document.getElementById('export-playlist-select');
+          
+          if (playlistList) {
+            playlistList.innerHTML = '<p class="text-red-400">Failed to load playlists. Please check your connection and try again.</p>';
+          }
+          if (removeSelect) {
+            removeSelect.innerHTML = '<option value="">Failed to load playlists</option>';
+          }
+          if (exportSelect) {
+            exportSelect.innerHTML = '<option value="">Failed to load playlists</option>';
+          }
         });
       }
-      
+
+      // Improved updatePlaylistUI with null checks
+      function updatePlaylistUI(playlists) {
+        if (!Array.isArray(playlists)) {
+          console.error('updatePlaylistUI received invalid data:', playlists);
+          return;
+        }
+        
+        // Update merge playlist list
+        const playlistList = document.getElementById('playlist-list');
+        if (playlistList) {
+          if (playlists.length === 0) {
+            playlistList.innerHTML = '<p class="text-gray-400">No playlists found. Create some playlists first!</p>';
+          } else {
+            playlistList.innerHTML = playlists.map(playlist => {
+              const playlistName = playlist.name || 'Unnamed Playlist';
+              const trackCount = (playlist.tracks && playlist.tracks.total) || 0;
+              const playlistId = playlist.id || '';
+              
+              return `<label class="flex items-center p-2 bg-[#111714] rounded cursor-pointer hover:bg-[#1a1a1a]">
+                <input type="checkbox" value="${playlistId}" class="mr-3 text-[#38e07b]">
+                <span class="text-white">${playlistName} (${trackCount} tracks)</span>
+              </label>`;
+            }).join('');
+          }
+        }
+        
+        // Update remove playlist select
+        const removeSelect = document.getElementById('remove-playlist-select');
+        if (removeSelect) {
+          if (playlists.length === 0) {
+            removeSelect.innerHTML = '<option value="">No playlists available</option>';
+          } else {
+            removeSelect.innerHTML = '<option value="">Select a playlist...</option>' +
+              playlists.map(playlist => {
+                const playlistName = playlist.name || 'Unnamed Playlist';
+                const trackCount = (playlist.tracks && playlist.tracks.total) || 0;
+                const playlistId = playlist.id || '';
+                
+                return `<option value="${playlistId}">${playlistName} (${trackCount} tracks)</option>`;
+              }).join('');
+          }
+        }
+        
+        // Update export playlist select
+        const exportSelect = document.getElementById('export-playlist-select');
+        if (exportSelect) {
+          if (playlists.length === 0) {
+            exportSelect.innerHTML = '<option value="">No playlists available</option>';
+          } else {
+            exportSelect.innerHTML = '<option value="">Select a playlist...</option>' +
+              playlists.map(playlist => {
+                const playlistName = playlist.name || 'Unnamed Playlist';
+                const trackCount = (playlist.tracks && playlist.tracks.total) || 0;
+                const playlistId = playlist.id || '';
+                
+                return `<option value="${playlistId}">${playlistName} (${trackCount} tracks)</option>`;
+              }).join('');
+          }
+        }
+      }
+            
       // Remove artist songs
       function removeArtistSongs() {
         const playlistId = document.getElementById('remove-playlist-select').value;
